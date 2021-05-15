@@ -1,9 +1,41 @@
 #! /bin/bash
 
-declare repo_rel repo_root repo_url repo_path repo_hashref
+declare repo_rel repo_root repo_url repo_path repo_hashref build_time tz version image
 
 repo_rel="$(git rev-parse --show-cdup)"
 repo_root="$(cd "${PWD}"/"${REPO_REL}" && pwd)"
 repo_url="$(git remote get-url origin)"
 repo_path=$(basename "${REPO_URL}" .git)
 repo_hashref="$(git rev-parse HEAD)"
+tz="$(date +%z | sed -E 's/([-+])([[:digit:]]{2})([[:digit:]]{2})/\1\2:\3/g')"
+build_time="$(date +%FT%T)${tz}"
+image=kineticcafe/sqitch-pgtap
+
+if ! (($#)); then
+  echo >&2 Error: No version provided.
+  exit 1
+elif ! [[ $1 =~ ^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+$ ]]; then
+  echo >&2 Error: Invalid version format provided: $1
+  exit 1
+fi
+
+version="$1"
+shift
+
+if [[ "$1" == --multi ]]; then
+  shift
+  docker buildx build --build-arg BUILD_DATE="${build_time}" \
+    --build-arg VC_REF="${repo_hashref}" \
+    --build-arg VERSION="${version}" \
+    --tag "${image}:latest" \
+    --tag "${image}:${version}" \
+    --platform linux/amd64,linux/arm64,linux/arm/v7 \
+    . "$@"
+else
+  docker build --build-arg BUILD_DATE="${build_time}" \
+    --build-arg VC_REF="${repo_hashref}" \
+    --build-arg VERSION="${version}" \
+    --tag "${image}:latest" \
+    --tag "${image}:${version}" \
+    . "$@"
+fi

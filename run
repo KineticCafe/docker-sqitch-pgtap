@@ -1,0 +1,36 @@
+#! /bin/bash
+
+declare image var cmd
+image=${IMAGE:-kineticcafe/sqitch-pgtap:latest}
+
+if ((!$#)); then
+  echo >&2 "No command given."
+  exit 1
+fi
+
+case "$1" in
+sqitch) cmd=/home/sqitcher/bin/do_sqitch ;;
+pg_prove) cmd=/home/sqitcher/bin/do_pg_prove ;;
+pgtap) cmd=/home/sqitcher/bin/do_pgtap ;;
+*)
+  echo "Unknown command '$1'."
+  exit 1
+  ;;
+esac
+
+shift
+
+declare -a passenv
+
+for var in \
+  PGUSER PGPASSWORD PGHOST PGHOSTADDR PGPORT PGDATABASE PGSERVICE \
+  PGOPTIONS PGSSLMODE PGREQUIRESSL PGSSLCOMPRESSION PGREQUIREPEER \
+  PGKRBSRVNAME PGKRBSRVNAME PGGSSLIB PGCONNECT_TIMEOUT PGCLIENTENCODING \
+  PGTARGETSESSIONATTRS; do
+  [[ ! -z "${!var}" ]] && passenv+=("-e" "$var=${!var}")
+done
+
+docker run -it --rm --network host \
+  --mount "type=bind,src=$(pwd),dst=/repo" \
+  --mount "type=bind,src=${HOME},dst=/root" \
+  "${passenv[@]}" "${image}" "${cmd}" "$@"

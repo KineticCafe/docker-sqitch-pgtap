@@ -1,0 +1,8 @@
+#! /bin/sh
+
+cd /repo || {
+  echo "Error changing to /repo"
+  exit 1
+}
+
+sqitch "$@"

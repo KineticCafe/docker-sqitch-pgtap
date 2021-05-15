@@ -1,0 +1,35 @@
+#! /bin/sh
+
+if [ -z "$1" ]; then
+  echo >&2 "No subcommand provided."
+  exit 1
+fi
+
+install_pgtap() {
+  psql -f /home/sqitcher/pgtap.sql >/dev/null 2>&1
+}
+
+uninstall_pgtap() {
+  psql -f /home/sqitcher/uninstall_pgtap.sql >/dev/null 2>&1
+}
+
+cd /repo || {
+  echo "Error changing to /repo"
+  exit 1
+}
+
+case "$1" in
+install) install_pgtap ;;
+uninstall) uninstall_pgtap ;;
+pg_prove) pg_prove "$@" ;;
+test)
+  shift
+  trap uninstall_pgtap EXIT
+  install_pgtap
+  pg_prove "$@"
+  ;;
+*)
+  echo >&2 "Unknown command '$1'."
+  exit 1
+  ;;
+esac
