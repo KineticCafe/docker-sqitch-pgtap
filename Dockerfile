@@ -32,15 +32,15 @@ USER sqitcher
 
 ENTRYPOINT []
 
-LABEL org.label-scheme.build-date=$BUILD_DATE \
-      org.label-schema.name="kineticcafe/sqitch-pgtap" \
-      org.label-schema.description="PostgreSQL sqitch & pgTAP" \
-      org.label-schema.url="https://github.com/KineticCafe/docker-sqitch-pgtap" \
-      org.label-schema.vcs-type="git" \
-      org.label-schema.vcs-url="https://github.com/KineticCafe/docker-sqitch-pgtap" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.version=$VERSION \
-      org.label-schema.vendor="Kinetic Cafe" \
-      org.label-schema.license="MIT" \
-      org.label-schema.docker.dockerfile="Dockerfile" \
-      org.label-schema.schema-version="1.0" \
+# LABEL org.label-scheme.build-date=$BUILD_DATE \
+#       org.label-schema.name="kineticcafe/sqitch-pgtap" \
+#       org.label-schema.description="PostgreSQL sqitch & pgTAP" \
+#       org.label-schema.url="https://github.com/KineticCafe/docker-sqitch-pgtap" \
+#       org.label-schema.vcs-type="git" \
+#       org.label-schema.vcs-url="https://github.com/KineticCafe/docker-sqitch-pgtap" \
+#       org.label-schema.vcs-ref=$VCS_REF \
+#       org.label-schema.version=$VERSION \
+#       org.label-schema.vendor="Kinetic Cafe" \
+#       org.label-schema.license="MIT" \
+#       org.label-schema.docker.dockerfile="Dockerfile" \
+#       org.label-schema.schema-version="1.0" \
