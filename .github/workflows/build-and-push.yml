@@ -30,7 +30,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.0.') }}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
             type=sha
       - name: Set up QEMU
@@ -60,12 +60,12 @@ jobs:
             linux/amd64
             linux/arm64
             linux/arm/v7
-      - name: Update repo description
-        uses: peter-evans/dockerhub-description@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: kineticcafe/sqitch-pgtap
-          # short-description: ${{ github.event.repository.description }}
+      # - name: Update repo description
+      #   uses: peter-evans/dockerhub-description@v2
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      #     repository: kineticcafe/sqitch-pgtap
+      #     # short-description: ${{ github.event.repository.description }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
