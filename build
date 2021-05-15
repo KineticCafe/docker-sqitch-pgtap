@@ -1,0 +1,9 @@
+#! /bin/bash
+
+declare repo_rel repo_root repo_url repo_path repo_hashref
+
+repo_rel="$(git rev-parse --show-cdup)"
+repo_root="$(cd "${PWD}"/"${REPO_REL}" && pwd)"
+repo_url="$(git remote get-url origin)"
+repo_path=$(basename "${REPO_URL}" .git)
+repo_hashref="$(git rev-parse HEAD)"
