@@ -1,0 +1,3 @@
+#! /bin/sh
+
+/home/sqitch/bin/do_pgtap pg_prove "$@"

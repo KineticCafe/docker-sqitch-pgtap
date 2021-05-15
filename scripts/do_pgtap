@@ -1,0 +1,60 @@
+#! /bin/sh
+
+if [ -z "$1" ]; then
+  echo >&2 "No subcommand provided."
+  exit 1
+fi
+
+psql_server_version() {
+  psql -q -c '\t on' -c 'show server_version;'
+}
+
+install_pgtap() {
+  psql -f "/opt/pgtap/${version}/pgtap.sql" >/dev/null 2>&1
+}
+
+uninstall_pgtap() {
+  psql -f "/opt/pgtap/${version}/uninstall_pgtap.sql" >/dev/null 2>&1
+  psql -c "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, TEXT);" \
+    -c "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, NAME, TEXT);" \
+    -c "DROP FUNCTION IF EXISTS col_not_null (NAME, NAME, TEXT);" \
+    -c "DROP FUNCTION IF EXISTS col_not_null (NAME, NAME, NAME, TEXT);" \
+    -c "DROP FUNCTION IF EXISTS finish (BOOLEAN);" \
+    -c "DROP FUNCTION IF EXISTS _finish (INTEGER, INTEGER, INTEGER, BOOLEAN);" \
+    >/dev/null 2>&1
+}
+
+cd /repo || {
+  echo "Error changing to /repo"
+  exit 1
+}
+
+version=$(psql_server_version | tr -d ' \t\n\v\r')
+
+case "${version}" in
+9.6*) version=9 ;;
+10*) version=10 ;;
+11*) version=11 ;;
+12*) version=12 ;;
+13*) version=13 ;;
+*)
+  echo "Unknown or unsupported PostgreSQL version '${version}'."
+  exit 1
+  ;;
+esac
+
+case "$1" in
+install) install_pgtap ;;
+uninstall) uninstall_pgtap ;;
+pg_prove) pg_prove "$@" ;;
+test)
+  shift
+  trap uninstall_pgtap EXIT
+  install_pgtap
+  pg_prove "$@"
+  ;;
+*)
+  echo >&2 "Unknown command '$1'."
+  exit 1
+  ;;
+esac
