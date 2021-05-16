@@ -13,9 +13,11 @@ This image is based loosely on the Docker images in:
 
 - [theory/tap-parser-sourcehandler-pgtap]
 - [LREN-CHUV/docker-pgtap]
+- [docker-sqitch]
 - [disaykin/pgtap-docker-image] ([gitlab.com/ringingmountain/docker/pgtap])
 
 [sqitch]: https://sqitch.org
+[docker-sqitch]: https://github.com/sqitchers/docker-sqitch
 [pgtap]: https://pgtap.org
 [`pg_prove`]: https://pgtap.org/pg_prove.html
 [theory/tap-parser-sourcehandler-pgtap]: https://github.com/theory/tap-parser-sourcehandler-pgtap

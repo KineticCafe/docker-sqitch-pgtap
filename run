@@ -1,7 +1,10 @@
 #! /bin/bash
 
-declare image var cmd
+declare image var cmd user uname_s
 image=${IMAGE:-kineticcafe/sqitch-pgtap:latest}
+
+user="${USER-$(whoami)}"
+uname_s="$(uname -s)"
 
 if ((!$#)); then
   echo >&2 "No command given."
@@ -27,7 +30,30 @@ esac
 
 shift
 
-declare -a passenv
+declare -a passopt
+passopt=(
+  -e "SQITCH_ORIG_SYSUSER=$user"
+  -e "SQITCH_ORIG_EMAIL=$user@$(hostname)"
+  -e "TZ=$(date +%Z)"
+  -e "LESS=${LESS:--R}"
+)
+
+case "${uname_s}" in
+Linux*)
+  passopt+=(-e "SQITCH_ORIG_FULLNAME=$(getent passwd $user | cut -d: -f5 | cut -d, -f1)")
+  passopt+=(-u $(id -u ${user}):$(id -g ${user}))
+  ;;
+Darwin*)
+  passopt+=(-e "SQITCH_ORIG_FULLNAME=$(/usr/bin/id -P $user | awk -F '[:]' '{print $8}')")
+  ;;
+MINGW* | CYGWIN*)
+  passopt+=(-e "SQITCH_ORIG_FULLNAME=$(net user $user)")
+  ;;
+*)
+  echo "Unknown OS: ${uname_s}"
+  exit 2
+  ;;
+esac
 
 : PGHOST="${PGHOST:-host.docker.internal}"
 : PGPORT="${PGPORT:-5432}"
@@ -37,14 +63,23 @@ if [[ "$(uname -s)" == Darwin ]]; then
 fi
 
 for var in \
-  PGUSER PGPASSWORD PGHOST PGHOSTADDR PGPORT PGDATABASE PGSERVICE \
-  PGOPTIONS PGSSLMODE PGREQUIRESSL PGSSLCOMPRESSION PGREQUIREPEER \
-  PGKRBSRVNAME PGKRBSRVNAME PGGSSLIB PGCONNECT_TIMEOUT PGCLIENTENCODING \
+  SQITCH_CONFIG SQITCH_EMAIL SQITCH_FULLNAME SQITCH_PASSWORD SQITCH_TARGET \
+  SQITCH_USERNAME \
+  DBI_TRACE \
+  PGUSER PGPASSWORD PGHOST PGHOSTADDR PGPORT PGDATABASE PGSERVICE PGOPTIONS \
+  PGSSLMODE PGREQUIRESSL PGSSLCOMPRESSION PGREQUIREPEER PGKRBSRVNAME \
+  PGKRBSRVNAME PGGSSLIB PGCONNECT_TIMEOUT PGCLIENTENCODING \
   PGTARGETSESSIONATTRS; do
-  [[ ! -z "${!var}" ]] && passenv+=("-e" "$var=${!var}")
+  [[ ! -z "${!var}" ]] && passopt+=("-e" "$var=${!var}")
 done
+
+homedst=/home
+if [ "$(id -u ${user})" -eq 0 ]; then
+  homedst=/root
+fi
+passopt+=(-e "HOME=${homedst}")
 
 docker run -it --rm --network host \
   --mount "type=bind,src=$(pwd),dst=/repo" \
-  --mount "type=bind,src=${HOME},dst=/root" \
-  "${passenv[@]}" "${image}" "${cmd}" "$@"
+  --mount "type=bind,src=${HOME},dst=${homedst}" \
+  "${passopt[@]}" "${image}" "${cmd}" "$@"

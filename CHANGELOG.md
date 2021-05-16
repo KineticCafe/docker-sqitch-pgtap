@@ -1,5 +1,12 @@
 # docker-sqitch-pgtap Changelog
 
+## 0.0.4 / 2021-05-15
+
+- Reenable the GHCR setup.
+- Start investigating what can be done for the Dockerhub README update action.
+- Extended the Docker image from docker-sqitch.
+- Extended the `run` script from the docker-sqitch.sh script.
+
 ## 0.0.3 / 2021-05-15
 
 - Add `tzdata` to the Docker image to help `sqitch` run.
