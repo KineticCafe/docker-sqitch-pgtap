@@ -3,12 +3,12 @@ name: build-and-push
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
     tags:
       - 'v*.*.*'
   pull_request:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   docker:
@@ -56,12 +56,12 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: |
-            linux/amd64
-            linux/arm64
-            linux/arm/v7
+          # platforms: |
+          #   linux/amd64
+          #   linux/arm64
+          #   linux/arm/v7
       - name: Display workspace
-        run: echo ${{ toJSON(github.workspace) }}
+        run: cat ${{ github.workspace }}/README.md
       # - name: Update repo description
       #   uses: peter-evans/dockerhub-description@v2
       #   with:
