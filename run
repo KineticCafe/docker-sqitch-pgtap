@@ -12,6 +12,13 @@ case "$1" in
 sqitch) cmd=/home/sqitcher/bin/do_sqitch ;;
 pg_prove) cmd=/home/sqitcher/bin/do_pg_prove ;;
 pgtap) cmd=/home/sqitcher/bin/do_pgtap ;;
+createdb | dropdb | psql) cmd="$1" ;;
+pg_config | pg_controldata | pg_ctl) cmd="$1" ;;
+pg_archivecleanup | pg_basebackup) cmd="$1" ;;
+pg_dump | pg_dumpall | pg_restore) cmd="$1" ;;
+pg_isready | pg_standby | pg_test_fsync | pg_test_timing) cmd="$1" ;;
+pg_recvlogical | pg_rewind | pg_upgrade) cmd="$1" ;;
+pg_receivexlog | pg_resetxlog | pg_xlogdump) cmd="$1" ;;
 *)
   echo "Unknown command '$1'."
   exit 1
@@ -21,6 +28,13 @@ esac
 shift
 
 declare -a passenv
+
+: PGHOST="${PGHOST:-host.docker.internal}"
+: PGPORT="${PGPORT:-5432}"
+
+if [[ "$(uname -s)" == Darwin ]]; then
+  PGUSER="${PGUSER:-${USER}}"
+fi
 
 for var in \
   PGUSER PGPASSWORD PGHOST PGHOSTADDR PGPORT PGDATABASE PGSERVICE \
