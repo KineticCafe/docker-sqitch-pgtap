@@ -111,12 +111,10 @@ RUN apk add --no-cache --update perl postgresql-client perl-app-cpanminus tzdata
         App::Sqitch@$SQITCH_VERSION \
         TAP::Parser::SourceHandler::pgTAP@$PGPROVE_VERSION \
         Template DBD::Pg \
-    && addgroup -S sqitch \
-    && adduser -S sqitch -G sqitch \
+    && adduser --disabled-password sqitch \
     && mkdir -p /opt /home/sqitch/bin \
     && apk del curl wget postgresql-dev build-base make perl-dev \
     && rm -rf /var/cache/apk/* /tmp/*
-
 
 COPY --from=build-pgtap /opt/pgtap /opt/pgtap
 COPY scripts/* /home/sqitch/bin

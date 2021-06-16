@@ -1,9 +1,9 @@
 # Sqitch & pgTAP in Docker
 
 This is a simple Docker container that contains [sqitch], [pgTAP], and
-[`pg_prove`]. This is the _first version_ of the container. It has been created
-so that it's easier to work with `sqitch` and `pg_prove`/`pgTAP` without going
-through the effort of installing them on various systems.
+[`pg_prove`]. It has been created so that it's easier to work with `sqitch` and
+`pg_prove`/`pgTAP` without going through the effort of installing them on
+various systems.
 
 The image is Alpine based and does not include the PostgreSQL server; instead,
 it is expected that all values will be provided through environment variables or
