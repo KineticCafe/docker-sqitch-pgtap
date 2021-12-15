@@ -1,27 +1,37 @@
-FROM alpine:3.13 AS download
+FROM alpine:3.15 AS download
 
-ENV PGTAP_VERSION=1.2.0-pre
+ENV PGTAP_VERSION=1.2.0
 
-# Until pgTAP 1.2 has been released, we need to use `git` to fix some issues
-# with the extension-less install/uninstall method. Commenting out the `curl`
-# version.
+RUN apk add curl \
+    && mkdir -p /opt && cd /opt \
+    && curl -sq -LO http://api.pgxn.org/dist/pgtap/$PGTAP_VERSION/pgtap-$PGTAP_VERSION.zip \
+    && unzip pgtap-$PGTAP_VERSION.zip \
+    && apk del curl \
+    && rm -rf /var/cache/apk/* /tmp/*
 
-# RUN apk add curl \
+# RUN apk add git \
 #     && mkdir -p /opt && cd /opt \
-#     && curl -sq -LO http://api.pgxn.org/dist/pgtap/$PGTAP_VERSION/pgtap-$PGTAP_VERSION.zip \
-#     && unzip pgtap-$PGTAP_VERSION.zip \
-#     && apk del curl \
+#     && git clone https://github.com/theory/pgtap.git pgtap-$PGTAP_VERSION \
+#     && apk del git \
 #     && rm -rf /var/cache/apk/* /tmp/*
 
-RUN apk add git \
-    && mkdir -p /opt && cd /opt \
-    && git clone https://github.com/theory/pgtap.git pgtap-$PGTAP_VERSION \
-    && apk del git \
+FROM postgres:14-alpine AS build-pgtap-psql-14
+
+ENV PGTAP_VERSION=1.2.0
+
+COPY --from=download /opt/pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
+
+RUN apk add --no-cache --update perl wget postgresql-dev openssl \
+        build-base make perl-dev bash \
+    && mkdir -p /opt/pgtap/14 \
+    && cd /opt/pgtap-$PGTAP_VERSION \
+    && make && make install \
+    && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/14 \
     && rm -rf /var/cache/apk/* /tmp/*
 
 FROM postgres:13-alpine AS build-pgtap-psql-13
 
-ENV PGTAP_VERSION=1.2.0-pre
+ENV PGTAP_VERSION=1.2.0
 
 COPY --from=download /opt/pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
 
@@ -35,7 +45,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
 
 FROM postgres:12-alpine as build-pgtap-psql-12
 
-ENV PGTAP_VERSION=1.2.0-pre
+ENV PGTAP_VERSION=1.2.0
 
 COPY --from=download /opt/pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
 
@@ -49,7 +59,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
 
 FROM postgres:11-alpine AS build-pgtap-psql-11
 
-ENV PGTAP_VERSION=1.2.0-pre
+ENV PGTAP_VERSION=1.2.0
 
 COPY --from=download /opt/pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
 
@@ -63,7 +73,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
 
 FROM postgres:10-alpine AS build-pgtap-psql-10
 
-ENV PGTAP_VERSION=1.2.0-pre
+ENV PGTAP_VERSION=1.2.0
 
 COPY --from=download /opt/pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
 
@@ -77,7 +87,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
 
 FROM postgres:9.6-alpine AS build-pgtap-psql-9
 
-ENV PGTAP_VERSION=1.2.0-pre
+ENV PGTAP_VERSION=1.2.0
 
 COPY --from=download /opt/pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
 
@@ -89,21 +99,23 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
     && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/9 \
     && rm -rf /var/cache/apk/* /tmp/*
 
-FROM alpine:3.13 AS build-pgtap
+FROM alpine:3.15 AS build-pgtap
 
 RUN mkdir -p /opt/pgtap
 
+COPY --from=build-pgtap-psql-14 /opt/pgtap/14 /opt/pgtap/14
 COPY --from=build-pgtap-psql-13 /opt/pgtap/13 /opt/pgtap/13
 COPY --from=build-pgtap-psql-12 /opt/pgtap/12 /opt/pgtap/12
 COPY --from=build-pgtap-psql-11 /opt/pgtap/11 /opt/pgtap/11
 COPY --from=build-pgtap-psql-10 /opt/pgtap/10 /opt/pgtap/10
 COPY --from=build-pgtap-psql-9 /opt/pgtap/9 /opt/pgtap/9
 
-FROM alpine:3.13
+FROM alpine:3.15
 
-ENV PGTAP_VERSION=1.2.0-pre \
+ENV __DOCKERFILE_VERSION__=1.1.0 \
+      PGTAP_VERSION=1.2.0 \
       PGPROVE_VERSION=3.35 \
-      SQITCH_VERSION=1.1.0
+      SQITCH_VERSION=1.2.1
 
 RUN apk add --no-cache --update perl postgresql-client perl-app-cpanminus tzdata \
         curl wget postgresql-dev openssl build-base make perl-dev bash nano less \

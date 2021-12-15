@@ -5,20 +5,66 @@ This is a simple Docker container that contains [sqitch], [pgTAP], and
 `pg_prove`/`pgTAP` without going through the effort of installing them on
 various systems.
 
-The image is Alpine based and does not include the PostgreSQL server; instead,
-it is expected that all values will be provided through environment variables or
-on the command-line.
+The image is based on Alpine (3.15) and does not include a PostgreSQL server;
+instead, it is expected that all values will be provided through environment
+variables or on the command-line.
 
 This version of the container includes:
 
-- pgTAP 1.1.0
-- pg_prove 3.35
-- Sqitch 1.1.0
+- pgTAP 1.2.0
+  - Support for PostgreSQL 9.6, 10, 11, 12, 13, and 14
+- pg_prove 3.36
+- Sqitch 1.2.1
 
-## Support
+The version of pgTAP is installed and uninstalled as needed; the unit test files
+must _not_ `CREATE EXTENSION pgtap`.
 
-Tests have been made on Ubuntu 18 and macOS 11 (Apple Silicon). More tests are
-underway.
+## `run` script Commands
+
+The `run` script is recommended for running everything as it manages environment
+variable configuration for each run.
+
+### Core commands
+
+- `sqitch`: Runs sqitch
+- `pg_prove`: Runs pg_prove directly
+- `pgtap install`: Installs pgTAP in the current database
+- `pgtap uninstall`: Uninstalls pgTAP from the current database
+- `pgtap test`: Installs pgTAP, runs pg_prove, and then uninstalls pgTAP
+- `version`: Prints the versions of the applications
+
+### PostgreSQL commands
+
+- `createdb`
+- `dropdb`
+- `psql`
+- `pg_config`
+- `pg_controldata`
+- `pg_ctl`
+- `pg_archivecleanup`
+- `pg_basebackup`
+- `pg_dump`
+- `pg_dumpall`
+- `pg_restore`
+- `pg_isready`
+- `pg_standby`
+- `pg_test_fsync`
+- `pg_test_timing`
+- `pg_recvlogical`
+- `pg_rewind`
+- `pg_upgrade`
+- `pg_receivexlog`
+- `pg_resetxlog`
+- `pg_xlogdump`
+
+### Extra commands
+
+- `sh`: Start a shell in the image
+- `nano`: Runs nano
+- `show-targets`: Shows configured sqitch targets
+- `show-default-target`: Shows the configured default target
+- `show-default-dbname`: Shows the configured default target database name
+- `pgtap-tests`: Runs `pgtap test test/*.sql` for the default database
 
 ## Sources
 

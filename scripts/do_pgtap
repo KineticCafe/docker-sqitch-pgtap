@@ -6,16 +6,18 @@ if [ -z "$1" ]; then
 fi
 
 psql_server_version() {
-  psql -q -c '\t on' -c 'show server_version;'
+  db="${PGDATABASE}"
+  [ -z "${db}" ] && db=postgres
+  psql -q "${db}" -c '\t on' -c 'show server_version;'
 }
 
 install_pgtap() {
-  psql -f "/opt/pgtap/${version}/pgtap.sql" >/dev/null 2>&1
+  psql "${PGDATABASE}" -f "/opt/pgtap/${version}/pgtap.sql" >/dev/null 2>&1
 }
 
 uninstall_pgtap() {
-  psql -f "/opt/pgtap/${version}/uninstall_pgtap.sql" >/dev/null 2>&1
-  psql -c "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, TEXT);" \
+  psql "${PGDATABASE}" -f "/opt/pgtap/${version}/uninstall_pgtap.sql" >/dev/null 2>&1
+  psql "${PGDATABASE}" -c "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, TEXT);" \
     -c "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, NAME, TEXT);" \
     -c "DROP FUNCTION IF EXISTS col_not_null (NAME, NAME, TEXT);" \
     -c "DROP FUNCTION IF EXISTS col_not_null (NAME, NAME, NAME, TEXT);" \
@@ -46,7 +48,6 @@ esac
 case "$1" in
 install) install_pgtap ;;
 uninstall) uninstall_pgtap ;;
-pg_prove) pg_prove "$@" ;;
 test)
   shift
   trap uninstall_pgtap EXIT

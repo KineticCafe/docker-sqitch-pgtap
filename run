@@ -1,85 +1,272 @@
 #! /bin/bash
 
-declare image var cmd user uname_s
-image=${IMAGE:-kineticcafe/sqitch-pgtap:latest}
+# This is a helper to run Sqitch, pgTAP, and PostgreSQL commands through the
+# kineticcafe/sqitch-pgtap Docker image. There is nothing modifiable in this
+# script. All configuration is handled by defaults, parameters, or environment
+# variables.
 
-user="${USER-$(whoami)}"
-uname_s="$(uname -s)"
+declare SQITCH_DBNAME SQITCH_TARGET cmd home_dest image tz uname_s user
+declare -a passopt
 
-if ((!$#)); then
-  echo >&2 "No command given."
-  exit 1
-fi
+puts() {
+  local message
 
-case "$1" in
-sqitch) cmd=/home/sqitcher/bin/do_sqitch ;;
-pg_prove) cmd=/home/sqitcher/bin/do_pg_prove ;;
-pgtap) cmd=/home/sqitcher/bin/do_pgtap ;;
-createdb | dropdb | psql) cmd="$1" ;;
-pg_config | pg_controldata | pg_ctl) cmd="$1" ;;
-pg_archivecleanup | pg_basebackup) cmd="$1" ;;
-pg_dump | pg_dumpall | pg_restore) cmd="$1" ;;
-pg_isready | pg_standby | pg_test_fsync | pg_test_timing) cmd="$1" ;;
-pg_recvlogical | pg_rewind | pg_upgrade) cmd="$1" ;;
-pg_receivexlog | pg_resetxlog | pg_xlogdump) cmd="$1" ;;
-*)
-  echo "Unknown command '$1'."
-  exit 1
-  ;;
-esac
+  if [ ${#} -eq 0 ] && [ ! -t 0 ]; then
+    message="$(cat -)"
+  else
+    message="$*"
+  fi
 
+  # shellcheck disable=1117
+  builtin printf "%s\n" "${message}"
+}
+
+puts-stderr() {
+  puts "$@" 1>&2
+}
+
+has() {
+  (($#)) || builtin return 1
+
+  builtin command -v "${@}" >/dev/null
+}
+
+set-command() {
+  case "$1" in
+  sh) cmd="$1" ;;
+  nano) cmd=/home/sqitch/bin/do_nano ;;
+  sqitch) cmd=/home/sqitch/bin/do_sqitch ;;
+  pg_prove) cmd=/home/sqitch/bin/do_pg_prove ;;
+  pgtap) cmd=/home/sqitch/bin/do_pgtap ;;
+  version) cmd=/home/sqitch/bin/do_version ;;
+  createdb | dropdb | psql) cmd="$1" ;;
+  pg_config | pg_controldata | pg_ctl) cmd="$1" ;;
+  pg_archivecleanup | pg_basebackup) cmd="$1" ;;
+  pg_dump | pg_dumpall | pg_restore) cmd="$1" ;;
+  pg_isready | pg_standby | pg_test_fsync | pg_test_timing) cmd="$1" ;;
+  pg_recvlogical | pg_rewind | pg_upgrade) cmd="$1" ;;
+  pg_receivexlog | pg_resetxlog | pg_xlogdump) cmd="$1" ;;
+  *)
+    return 1
+    ;;
+  esac
+
+  return 0
+}
+
+has-command() {
+  local cmd
+  set-command "$1"
+}
+
+has-function() {
+  LC_ALL=C [ "$(type -t "$1")" == 'function' ]
+}
+
+fail() {
+  local -i result
+
+  if [[ "$1" =~ ^[[:digit:]]+$ ]]; then
+    result="$1"
+    shift
+  else
+    result=1
+  fi
+
+  (($#)) && puts-stderr "Error: $*"
+  exit "${result}"
+}
+
+fail-unless() {
+  local -i result
+  "${@}"
+  result=$?
+
+  if ((result)); then
+    fail "${result}" "Error in command: ${*} (${result})"
+  else
+    return "${result}"
+  fi
+}
+
+apply-platform-options() {
+  case "${uname_s}" in
+  Linux*)
+    [ -L /etc/localtime ] && tz=$(readlink /etc/localtime | sed -e 's!/usr/share/zoneinfo/!!')
+    passopt+=(-e "SQITCH_ORIG_FULLNAME=$(getent passwd ${user} | cut -d: -f5 | cut -d, -f1)")
+    passopt+=(-u $(id -u ${user}):$(id -g ${user}))
+    ;;
+  Darwin*)
+    [ -L /etc/localtime ] && tz=$(readlink /etc/localtime | sed -e 's!/var/db/timezone/zoneinfo/!!')
+    passopt+=(-e "SQITCH_ORIG_FULLNAME=$(/usr/bin/id -P ${user} | awk -F '[:]' '{print $8}')")
+    ;;
+  MINGW* | CYGWIN*)
+    passopt+=(-e "SQITCH_ORIG_FULLNAME=$(net user ${user})")
+    ;;
+  *)
+    echo "Unknown OS: ${uname_s}"
+    exit 2
+    ;;
+  esac
+}
+
+setup() {
+  image=${IMAGE:-kineticcafe/sqitch-pgtap:1.1}
+  user="${USER-$(whoami)}"
+  uname_s="$(uname -s)"
+
+  home_dest=/home/"${user}"
+  [[ "$(id -u "${user}")" -eq 0 ]] && home_dest=/root
+
+  apply-platform-options
+
+  passopt=(
+    -e "SQITCH_ORIG_SYSUSER=${user}"
+    -e "SQITCH_ORIG_EMAIL=${user}@$(hostname)"
+    -e "TZ=$(date +%Z)"
+    -e "LESS=${LESS:--R}"
+    -e "HOME=${home_dest}"
+  )
+
+  local var
+
+  PGHOST="${PGHOST:-host.docker.internal}"
+  PGPORT="${PGPORT:-5432}"
+
+  [[ "${uname_s}" == Darwin ]] && PGUSER="${PGUSER:-${USER}}"
+
+  # PGDATABASE is excluded because we want SQITCH_DBNAME
+  # SQITCH_TARGET is skipped in this list because we handle it below.
+  for var in \
+    SQITCH_CONFIG SQITCH_EMAIL SQITCH_FULLNAME SQITCH_PASSWORD \
+    SQITCH_USERNAME \
+    DBI_TRACE \
+    PGUSER PGPASSWORD PGHOST PGHOSTADDR PGPORT PGSERVICE PGOPTIONS \
+    PGSSLMODE PGREQUIRESSL PGSSLCOMPRESSION PGREQUIREPEER PGKRBSRVNAME \
+    PGKRBSRVNAME PGGSSLIB PGCONNECT_TIMEOUT PGCLIENTENCODING \
+    PGTARGETSESSIONATTRS; do
+    [[ -n "${!var}" ]] && passopt+=("-e" "${var}=${!var}")
+  done
+
+  local default_target
+  default_target=$(get-sqitch-config --get engine.pg.target)
+
+  SQITCH_TARGET="${SQITCH_TARGET:-${default_target}}"
+  passopt+=(-e "SQITCH_TARGET=${SQITCH_TARGET}")
+  SQITCH_DBNAME="${SQITCH_DBNAME:-$(
+    get-sqitch-config --get target."${SQITCH_TARGET}".uri | sed -e 's/^db:pg://'
+  )}"
+
+  passopt+=(-e "PGDATABASE=${PGDATABASE:-${SQITCH_DBNAME}}")
+
+  readonly SQITCH_TARGET SQITCH_DBNAME image user uname_s home_dest
+}
+
+run() {
+  (($#)) || fail "No command given to run."
+
+  local v cmd
+
+  if ! set-command "$1"; then
+    echo "Unsupported run command '$1'."
+    exit 1
+  fi
+
+  shift
+
+  docker run -it --rm --network host \
+    --mount "type=bind,src=$(pwd),dst=/repo" \
+    --mount "type=bind,src=${HOME},dst=${home_dest},readonly" \
+    "${passopt[@]}" "${image}" "${cmd}" "$@"
+}
+
+get-sqitch-config() {
+  local result
+  result="$(run sqitch config "$@" | tr -d '\t\r\n')" ||
+    fail $? "Result - [${result}]"
+  echo "${result}"
+}
+
+# These are commands publicly documented.
+
+run-commands() {
+  cat <<-EOS
+Core commands:
+
+  sqitch              Runs sqitch
+  pg_prove            Runs pg_prove directly
+  pgtap install       Installs pgTAP in the current database
+  pgtap uninstall     Uninstalls pgTAP from the current database
+  pgtap test          Installs pgTAP, runs pg_prove, and then uninstalls pgTAP
+  version             Prints the versions of the applications
+
+PostgreSQL commands:
+
+  createdb, dropdb, psql, pg_config, pg_controldata, pg_ctl, pg_archivecleanup,
+  pg_basebackup, pg_dump, pg_dumpall, pg_restore, pg_isready, pg_standby,
+  pg_test_fsync, pg_test_timing, pg_recvlogical, pg_rewind, pg_upgrade,
+  pg_receivexlog, pg_resetxlog, pg_xlogdump
+
+Extra commands:
+
+  sh                  Start a shell in the image
+  nano                Runs nano
+
+  show-targets        Shows configured sqitch targets
+  show-default-target Shows the configured default target
+  show-default-dbname Shows the configured default target database name
+  pgtap-tests         Runs 'pgtap test test/*.sql' for the default database
+EOS
+}
+
+run-show-targets() {
+  run sqitch config --get-regexp '^target\.' |
+    cut -f1 -d= | cut -f2 -d.
+}
+
+run-show-default-target() {
+  echo "${SQITCH_TARGET}"
+}
+
+run-show-default-dbname() {
+  echo "${SQITCH_DBNAME}"
+}
+
+run-pgtap-tests() {
+  fail-unless run pgtap test -d "${SQITCH_DBNAME}" --shuffle test/*.sql
+}
+
+run-sh() {
+  run sh "$@"
+}
+
+run-nano() {
+  run nano "$@"
+}
+
+run-createdb() {
+  local db
+  db="${1:-${SQITCH_DBNAME}}"
+  shift
+  run createdb "${db}" "$@"
+}
+
+run-dropdb() {
+  local db
+  db="${1:-${SQITCH_DBNAME}}"
+  shift
+  run dropdb "${db}" "$@"
+}
+
+cmd="$1"
 shift
 
-declare -a passopt
-passopt=(
-  -e "SQITCH_ORIG_SYSUSER=${user}"
-  -e "SQITCH_ORIG_EMAIL=${user}@$(hostname)"
-  -e "TZ=$(date +%Z)"
-  -e "LESS=${LESS:--R}"
-)
-
-case "${uname_s}" in
-Linux*)
-  passopt+=(-e "SQITCH_ORIG_FULLNAME=$(getent passwd "${user}" | cut -d: -f5 | cut -d, -f1)")
-  passopt+=(-u "$(id -u "${user}"):$(id -g "${user}")")
-  ;;
-Darwin*)
-  passopt+=(-e "SQITCH_ORIG_FULLNAME=$(/usr/bin/id -P "${user}" | awk -F '[:]' '{print $8}')")
-  ;;
-MINGW* | CYGWIN*)
-  passopt+=(-e "SQITCH_ORIG_FULLNAME=$(net user "${user}")")
-  ;;
-*)
-  echo "Unknown OS: ${uname_s}"
-  exit 2
-  ;;
-esac
-
-: PGHOST="${PGHOST:-host.docker.internal}"
-: PGPORT="${PGPORT:-5432}"
-
-if [[ "$(uname -s)" == Darwin ]]; then
-  PGUSER="${PGUSER:-${USER}}"
+if has-function "run-${cmd}"; then
+  setup
+  run-"${cmd}" "$@"
+elif has-command "${cmd}"; then
+  setup
+  run "${cmd}" "$@"
+else
+  fail 127 "Unknown command ${cmd}."
 fi
-
-for var in \
-  SQITCH_CONFIG SQITCH_EMAIL SQITCH_FULLNAME SQITCH_PASSWORD SQITCH_TARGET \
-  SQITCH_USERNAME \
-  DBI_TRACE \
-  PGUSER PGPASSWORD PGHOST PGHOSTADDR PGPORT PGDATABASE PGSERVICE PGOPTIONS \
-  PGSSLMODE PGREQUIRESSL PGSSLCOMPRESSION PGREQUIREPEER PGKRBSRVNAME \
-  PGKRBSRVNAME PGGSSLIB PGCONNECT_TIMEOUT PGCLIENTENCODING \
-  PGTARGETSESSIONATTRS; do
-  [[ -n "${!var}" ]] && passopt+=("-e" "${var}=${!var}")
-done
-
-homedst=/home/"${user}"
-if [[ "$(id -u "${user}")" -eq 0 ]]; then
-  homedst=/root
-fi
-passopt+=(-e "HOME=${homedst}")
-
-docker run -it --rm --network host \
-  --mount "type=bind,src=$(pwd),dst=/repo" \
-  --mount "type=bind,src=${HOME},dst=${homedst}" \
-  "${passopt[@]}" "${image}" "${cmd}" "$@"

@@ -1,0 +1,9 @@
+#! /bin/sh
+
+cat <<EOS
+kineticcafe/sqitch-pgtap:${__DOCKERFILE_VERSION__}
+
+  $(sqitch --version)
+  pgtap ${PGTAP_VERSION}
+  $(pg_prove --version)
+EOS
