@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 
 # This is a helper to run Sqitch, pgTAP, and PostgreSQL commands through the
 # kineticcafe/sqitch-pgtap Docker image. There is nothing modifiable in this
@@ -7,6 +7,12 @@
 
 declare SQITCH_DBNAME SQITCH_TARGET cmd home_dest image tz uname_s user
 declare -a passopt
+
+declare STRUCTURE_TARGET TIMESTAMP bn0
+bn0="$(basename $0)"
+STRUCTURE_TARGET="${STRUCTURE_TARGET:-structure.sql}"
+TIMESTAMP="${TIMESTAMP:-"$(date -u +%Y%m%d%H%M%S)"}"
+readonly STRUCTURE_TARGET TIMESTAMP bn0
 
 puts() {
   local message
@@ -46,6 +52,7 @@ set-command() {
   pg_isready | pg_standby | pg_test_fsync | pg_test_timing) cmd="$1" ;;
   pg_recvlogical | pg_rewind | pg_upgrade) cmd="$1" ;;
   pg_receivexlog | pg_resetxlog | pg_xlogdump) cmd="$1" ;;
+  openssl) cmd="$1" ;;
   *)
     return 1
     ;;
@@ -104,8 +111,7 @@ apply-platform-options() {
     passopt+=(-e "SQITCH_ORIG_FULLNAME=$(net user ${user})")
     ;;
   *)
-    echo "Unknown OS: ${uname_s}"
-    exit 2
+    fail 2 "Unknown OS: ${uname_s}"
     ;;
   esac
 }
@@ -149,7 +155,7 @@ setup() {
   done
 
   local default_target
-  default_target=$(get-sqitch-config --get engine.pg.target)
+  default_target="$(get-sqitch-config --get engine.pg.target)"
 
   SQITCH_TARGET="${SQITCH_TARGET:-${default_target}}"
   passopt+=(-e "SQITCH_TARGET=${SQITCH_TARGET}")
@@ -160,6 +166,18 @@ setup() {
   passopt+=(-e "PGDATABASE=${PGDATABASE:-${SQITCH_DBNAME}}")
 
   readonly SQITCH_TARGET SQITCH_DBNAME image user uname_s home_dest
+}
+
+must-run() {
+  fail-unless run "${@}"
+}
+
+quiet() {
+  "${@}" >/dev/null
+}
+
+very-quiet() {
+  "${@}" >/dev/null 2>/dev/null
 }
 
 run() {
@@ -189,8 +207,10 @@ get-sqitch-config() {
 
 # These are commands publicly documented.
 
-run-commands() {
-  cat <<-EOS
+usage() {
+  puts <<-EOS
+Usage: ${bn0} COMMAND [args…]
+
 Core commands:
 
   sqitch              Runs sqitch
@@ -209,13 +229,24 @@ PostgreSQL commands:
 
 Extra commands:
 
-  sh                  Start a shell in the image
-  nano                Runs nano
+  sh              Start a shell in the image
+  nano            The nano editor
+  openssl         The openssl command-line
 
-  show-targets        Shows configured sqitch targets
-  show-default-target Shows the configured default target
-  show-default-dbname Shows the configured default target database name
-  pgtap-tests         Runs 'pgtap test test/*.sql' for the default database
+  show-targets    Shows all configured sqitch targets
+  show-target     Shows the configured default target
+  show-dbname     Shows the configured default target database name
+  pgtap-tests     Runs 'pgtap test test/*.sql' for the default database
+  structure       Writes the database structure to disk.
+  release         Creates a tarball from a sqitch bundle.
+EOS
+}
+
+usage-show-targets() {
+  puts <<-EOS
+Usage: ${bn0} show-targets
+
+Shows all configured sqitch targets.
 EOS
 }
 
@@ -224,24 +255,58 @@ run-show-targets() {
     cut -f1 -d= | cut -f2 -d.
 }
 
-run-show-default-target() {
+usage-show-target() {
+  puts <<-EOS
+Usage: ${bn0} show-target
+
+Shows the configured default target.
+EOS
+}
+
+run-show-target() {
   echo "${SQITCH_TARGET}"
 }
 
-run-show-default-dbname() {
+run-show-default-target() {
+  echo >&2 "show-default-target is deprecated, use show-target instead"
+  run-show-target
+}
+
+usage-show-dbname() {
+  puts <<-EOS
+Usage: ${bn0} show-dbname
+
+Shows the configured default database name.
+EOS
+}
+
+run-show-dbname() {
   echo "${SQITCH_DBNAME}"
+}
+
+run-show-default-dbname() {
+  echo >&2 "show-default-dbname is deprecated, use show-dbname instead"
+  run-show-dbname
+}
+
+usage-pgtap-tests() {
+  puts <<-EOS
+Usage: ${bn0} pgtap-tests
+
+Runs 'pgtap test test/*.sql' with shuffling against the configured database.
+EOS
 }
 
 run-pgtap-tests() {
   fail-unless run pgtap test -d "${SQITCH_DBNAME}" --shuffle test/*.sql
 }
 
-run-sh() {
-  run sh "$@"
-}
+usage-createdb() {
+  run createdb --help | sed '/^By default,/,+1d'
+  puts <<-EOS
 
-run-nano() {
-  run nano "$@"
+By default, a database for the Sqitch target database will be created.
+EOS
 }
 
 run-createdb() {
@@ -251,11 +316,203 @@ run-createdb() {
   run createdb "${db}" "$@"
 }
 
+usage-dropdb() {
+  run dropdb --help
+  puts <<-EOS
+
+By default, the database for the Sqitch target database will be dropped.
+EOS
+}
+
 run-dropdb() {
   local db
   db="${1:-${SQITCH_DBNAME}}"
   shift
   run dropdb "${db}" "$@"
+}
+
+usage-structure() {
+  puts <<-EOS
+Usage: ${bn0} structure [--output FILE] [--clean] [--compare]
+
+Writes the database structure to disk.
+
+Options:
+
+--output FILE   Writes the structure to FILE (default \$STRUCTURE_TARGET or
+                structure.sql)
+--clean         Creates a temporary database before dumping the structure
+--compare       Compares the current structure file against the current
+                structure of the database; implies --clean.
+EOS
+}
+
+run-structure() {
+  local dbname target clean compare arg need
+  compare=false
+  need=false
+  clean=false
+
+  for arg in "${@}"; do
+    if "${need}"; then
+      if [[ "${arg}" =~ ^--(output|compare|clean) ]]; then
+        fail 125 "structure --output requires a filename"
+      fi
+
+      target="${arg}"
+      need=false
+      continue
+    fi
+
+    case "${arg}" in
+    --output) need=true ;;
+    --clean) clean=true ;;
+    --compare)
+      [[ -f "${STRUCTURE_TARGET}" ]] ||
+        fail 124 "structure --compare expects ${STRUCTURE_TARGET} to exist"
+      compare=true
+      clean=true
+      ;;
+    esac
+  done
+
+  if "${clean}"; then
+    dbname="clean_$(run openssl rand -hex 16 | tr -d '\r')"
+
+    if (($(psql --list | grep -c "${dbname}"))); then
+      quiet must-run dropdb "${dbname}"
+    fi
+    quiet must-run createdb "${dbname}"
+    quiet must-run sqitch deploy db:pg:"${dbname}"
+  fi
+
+  "${compare}" && target="${dbname}"
+
+  must-run pg_dump -s -O -x -d "${dbname}" | tr -d '\r' >"${target}"
+
+  "${clean}" && quiet must-run dropdb "${dbname}"
+
+  if "${compare}"; then
+    [[ x"${CI}" = x ]] || PAGER=
+    diff -u "${STRUCTURE_TARGET}" "${target}"
+    rm -f "${target}"
+  fi
+}
+
+usage-release() {
+  puts -R <<-EOS
+Usage: ${bn0} release [ARGS]
+
+Creates a tarball from a sqitch bundle file using the provided arguments.
+
+The tarball will be placed in 'release/\$REPO_NAME-\$TIMESTAMP.tar.gz'. The
+REPO_NAME is the based on either the base name of the origin URL for a git
+repository or the build root directory name.
+
+The bundle directory will be removed after the tarball has been created.
+
+Options:
+
+--tarball FILE  Specifies the tarball name. If the provided filename ends with
+                '.tar.gz' or '.tgz', the tarball will be compressed. If it ends
+                with '.tar', it will not be compressed. If it ends with neither,
+                '.tar.gz' will be added and the tarball will be compressed. This
+                requires a 'tar' command that supports the shorthands 'cf' or
+                'cfz'.
+
+--clean         Remove the bundle and release directories before running.
+
+See '${bn0} sqitch help bundle' for other supported arguments.
+EOS
+}
+
+run-release() {
+  local bundle tarball arg last_arg clean_bundle clean_release
+  local -a args
+  compress=z
+  clean_bundle=false
+  clean_release=false
+  args=()
+
+  for arg in "${@}"; do
+    case "${last_arg}" in
+    --tarball)
+      tarball="${arg}"
+      ;;
+    --dest-dir | --dir)
+      bundle="${arg}"
+      ;;
+    esac
+
+    if [[ -n "${last_arg}" ]]; then
+      last_arg=
+      continue
+    fi
+
+    case "${arg}" in
+    --dest-dir | --dir | --tarball)
+      last_arg="${arg}"
+      ;;
+    --clean)
+      clean_bundle=true
+      clean_release=true
+      ;;
+    *)
+      args+=("${arg}")
+      ;;
+    esac
+  done
+
+  if [[ -z "${tarball}" ]]; then
+    if very-quiet git remote get-url origin; then
+      tarball="$(basename "$(git remote get-url origin)" .git)"
+    elif very-quiet git rev-parse --show-cdup; then
+      tarball="$(basename "$(cd "${PWD}/$(git rev-parse --show-cdup)")")"
+    else
+      tarball="$(basename "${PWD}")"
+    fi
+
+    tarball="release/${tarball}-${TIMESTAMP}"
+  else
+    clean_release=false
+  fi
+
+  case "${tarball}" in
+  *.tgz | *.tar.gz) ;;
+  *.tar) compress= ;;
+  *) tarball="${tarball}.tar.gz" ;;
+  esac
+
+  if [[ -z "${bundle}" ]]; then
+    bundle="$(get-sqitch-config --get bundle.dest_dir)"
+    [[ -z "${bundle}" ]] && bundle="bundle"
+  fi
+
+  "${clean_bundle}" && fail-unless rm -rf "${bundle}"
+  quiet must-run sqitch bundle "${args[@]}"
+
+  "${clean_release}" && fail-unless rm -rf release
+  fail-unless mkdir -p "$(dirname "${tarball}")"
+  fail-unless tar cf"${compress}" "${tarball}" -C "${bundle}" .
+  fail-unless rm -rf "${bundle}"
+}
+
+run-help() {
+  local cmd
+  cmd="${1}"
+
+  if [[ -z "${cmd}" ]] || [[ "${cmd}" = help ]]; then
+    usage
+  elif has-function "run-${cmd}" && has-function "usage-${cmd}"; then
+    usage-"${cmd}"
+  elif has-command "${cmd}"; then
+    run "${cmd}" --help
+  else
+    puts-stderr "Error: Unknown command ${cmd}."
+    puts-stderr ""
+    usage | puts-stderr
+    fail 127
+  fi
 }
 
 cmd="$1"
@@ -267,6 +524,8 @@ if has-function "run-${cmd}"; then
 elif has-command "${cmd}"; then
   setup
   run "${cmd}" "$@"
+elif [[ -z "${cmd}" ]]; then
+  usage
 else
   fail 127 "Unknown command ${cmd}."
 fi

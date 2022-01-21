@@ -117,8 +117,22 @@ ENV __DOCKERFILE_VERSION__=1.1.0 \
       PGPROVE_VERSION=3.35 \
       SQITCH_VERSION=1.2.1
 
-RUN apk add --no-cache --update perl postgresql-client perl-app-cpanminus tzdata \
-        curl wget postgresql-dev openssl build-base make perl-dev bash nano less \
+RUN apk add --no-cache --update \
+        build-base \
+        curl \
+        wget \
+        perl-dev \
+        postgresql-dev \
+        make \
+    && apk add --no-cache --update \
+        bash \
+        less \
+        nano \
+        openssl \
+        perl \
+        perl-app-cpanminus \
+        postgresql-client \
+        tzdata \
     && cpanm --quiet --notest \
         App::Sqitch@$SQITCH_VERSION \
         TAP::Parser::SourceHandler::pgTAP@$PGPROVE_VERSION \
