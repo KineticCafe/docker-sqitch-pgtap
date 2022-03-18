@@ -140,10 +140,10 @@ RUN apk add --no-cache --update \
     && adduser --disabled-password sqitch \
     && mkdir -p /opt /home/sqitch/bin \
     && apk del curl wget postgresql-dev build-base make perl-dev \
-    && rm -rf /var/cache/apk/* /tmp/*
+    && rm -rf /var/cache/apk/* /tmp/* /root/.cpanm
 
 COPY --from=build-pgtap /opt/pgtap /opt/pgtap
-COPY scripts/* /home/sqitch/bin
+COPY scripts/* /home/sqitch/bin/
 RUN chmod +x /home/sqitch/bin/* \
     && chown -R sqitch:sqitch /home
 
