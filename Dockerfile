@@ -133,7 +133,7 @@ RUN apk add --no-cache --update \
         perl-app-cpanminus \
         postgresql-client \
         tzdata \
-    && cpanm --quiet --notest \
+    && cpanm --quiet --notest --no-man-pages \
         App::Sqitch@$SQITCH_VERSION \
         TAP::Parser::SourceHandler::pgTAP@$PGPROVE_VERSION \
         Template DBD::Pg \
