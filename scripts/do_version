@@ -1,7 +1,7 @@
-#! /bin/sh
+#! /bin/bash
 
 cat <<EOS
-kineticcafe/sqitch-pgtap:${__DOCKERFILE_VERSION__}
+kineticcafe/sqitch-pgtap:$(cat /home/sqitch/VERSION)
 
   $(sqitch --version)
   pgtap ${PGTAP_VERSION}

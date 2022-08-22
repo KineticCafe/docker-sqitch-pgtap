@@ -11,12 +11,13 @@ variables or on the command-line.
 
 This version of the container includes:
 
-- pgTAP 1.2.0
-  - Support for PostgreSQL 9.6, 10, 11, 12, 13, and 14
+- pgTAP 1.2.1 (via git, as 1.2.1 has not been released)
+  - Support for PostgreSQL 10, 11, 12, 13, and 14
+  - Support for PostgreSQL 15 beta 3
 - pg_prove 3.36
-- Sqitch 1.2.1
+- Sqitch 1.3.0
 
-The version of pgTAP is installed and uninstalled as needed; the unit test files
+The version of pgTAP is installed and uninstalled as needed; unit test files
 must _not_ `CREATE EXTENSION pgtap`.
 
 ## `run` script Commands

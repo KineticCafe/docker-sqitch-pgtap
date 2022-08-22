@@ -11,6 +11,7 @@ on:
       - 'main'
   schedule:
     - cron: '0 10 25 * *' # Monthly at 10am on the 25th
+  workflow_dispatch:
 
 jobs:
   build:
@@ -35,7 +36,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.0.') }}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
             type=sha
-      - name: Set up QEMU for cross-build
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2

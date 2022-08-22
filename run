@@ -37,6 +37,11 @@ has() {
   builtin command -v "${@}" >/dev/null
 }
 
+get-current-docker-context() {
+  docker context ls --format '{{ . | json }}' |
+    jq -sr '.[] | select(.Current == true) | .Name'
+}
+
 set-command() {
   case "$1" in
   sh) cmd="$1" ;;
@@ -129,14 +134,19 @@ setup() {
   passopt=(
     -e "SQITCH_ORIG_SYSUSER=${user}"
     -e "SQITCH_ORIG_EMAIL=${user}@$(hostname)"
-    -e "TZ=$(date +%Z)"
+    -e "TZ=Etc/UTC"
     -e "LESS=${LESS:--R}"
     -e "HOME=${home_dest}"
   )
 
-  local var
+  local var docker_host
 
-  PGHOST="${PGHOST:-host.docker.internal}"
+  case "$(get-current-docker-context)" in
+  colima) docker_host="host.lima.internal" ;;
+  *) docker_host="host.docker.internal" ;;
+  esac
+
+  PGHOST="${PGHOST:-${docker_host}}"
   PGPORT="${PGPORT:-5432}"
 
   [[ "${uname_s}" == Darwin ]] && PGUSER="${PGUSER:-${USER}}"
@@ -185,16 +195,13 @@ run() {
 
   local v cmd
 
-  if ! set-command "$1"; then
-    echo "Unsupported run command '$1'."
-    exit 1
-  fi
-
+  set-command "$1" || fail "Unsupported run command '$1'."
   shift
 
   docker run -it --rm --network host \
     --mount "type=bind,src=$(pwd),dst=/repo" \
     --mount "type=bind,src=${HOME},dst=${home_dest},readonly" \
+    --user "$(id -u):$(id -g)" \
     "${passopt[@]}" "${image}" "${cmd}" "$@"
 }
 
@@ -202,10 +209,8 @@ get-sqitch-config() {
   local result
   result="$(run sqitch config "$@" | tr -d '\t\r\n')" ||
     fail $? "Result - [${result}]"
-  echo "${result}"
+  puts "${result}"
 }
-
-# These are commands publicly documented.
 
 usage() {
   puts <<-EOS
@@ -264,12 +269,7 @@ EOS
 }
 
 run-show-target() {
-  echo "${SQITCH_TARGET}"
-}
-
-run-show-default-target() {
-  echo >&2 "show-default-target is deprecated, use show-target instead"
-  run-show-target
+  puts "${SQITCH_TARGET}"
 }
 
 usage-show-dbname() {
@@ -281,12 +281,7 @@ EOS
 }
 
 run-show-dbname() {
-  echo "${SQITCH_DBNAME}"
-}
-
-run-show-default-dbname() {
-  echo >&2 "show-default-dbname is deprecated, use show-dbname instead"
-  run-show-dbname
+  puts "${SQITCH_DBNAME}"
 }
 
 usage-pgtap-tests() {
@@ -347,6 +342,12 @@ Options:
 EOS
 }
 
+clean-structure() {
+  cat "$1" |
+    sed -e '/Dumped from database version/d' |
+    sed -e '/Dumped by pg_dump version/d'
+}
+
 run-structure() {
   local dbname target clean compare arg need
   compare=false
@@ -382,19 +383,28 @@ run-structure() {
     if (($(psql --list | grep -c "${dbname}"))); then
       quiet must-run dropdb "${dbname}"
     fi
+
     quiet must-run createdb "${dbname}"
     quiet must-run sqitch deploy db:pg:"${dbname}"
   fi
 
+  [[ -z "${target}" ]] && target="${STRUCTURE_TARGET}"
+
   "${compare}" && target="${dbname}"
 
-  must-run pg_dump -s -O -x -d "${dbname}" | tr -d '\r' >"${target}"
+  must-run pg_dump -s -O -x -d "${dbname}" |
+    tr -d '\r' >"${target}"
 
   "${clean}" && quiet must-run dropdb "${dbname}"
 
   if "${compare}"; then
-    [[ x"${CI}" = x ]] || PAGER=
-    diff -u "${STRUCTURE_TARGET}" "${target}"
+    [[ -z "${CI}" ]] && PAGER=
+
+    diff -u \
+      <(clean-structure "${STRUCTURE_TARGET}") \
+      <(clean-structure "${target}") &&
+      puts "No differences in database structure."
+
     rm -f "${target}"
   fi
 }
