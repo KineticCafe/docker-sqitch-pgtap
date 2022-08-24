@@ -1,13 +1,13 @@
-#! /bin/sh
+#! /bin/bash
 
-if [ -z "$1" ]; then
+if [[ -z "$1" ]]; then
   echo >&2 "No subcommand provided."
   exit 1
 fi
 
 psql_server_version() {
   db="${PGDATABASE}"
-  [ -z "${db}" ] && db=postgres
+  [[ -z "${db}" ]] && db=postgres
   psql -q "${db}" -c '\t on' -c 'show server_version;'
 }
 
@@ -27,20 +27,28 @@ uninstall_pgtap() {
 }
 
 cd /repo || {
-  echo "Error changing to /repo"
+  echo >&2 "Error changing to /repo"
   exit 1
 }
 
 version=$(psql_server_version | tr -d ' \t\n\v\r')
 
 case "${version}" in
-9.6*) version=9 ;;
+9.6*)
+  cat >&2 <<ERROR
+Unsupported version of PostgreSQL 9.6. If PostgreSQL 9.6 is still required, use
+image kineticcafe/sqitch-pgtap:1.1.0.
+ERROR
+  exit 1
+  ;;
 10*) version=10 ;;
 11*) version=11 ;;
 12*) version=12 ;;
 13*) version=13 ;;
+14*) version=14 ;;
+15*) version=15 ;; # This is beta support
 *)
-  echo "Unknown or unsupported PostgreSQL version '${version}'."
+  echo >&2 "Unknown or unsupported PostgreSQL version '${version}'."
   exit 1
   ;;
 esac
