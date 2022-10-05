@@ -1,5 +1,11 @@
 # docker-sqitch-pgtap Changelog
 
+## 2.0.1 / 2022-10-04
+
+- Update sqitch version to 1.3.1.
+
+- Update PostgreSQL 15 to RC 1 from beta 3.
+
 ## 2.0.0 / 2022-08-23
 
 - Update base alpine version to 3.16. Made the use of alpine 3.16 explicit in
