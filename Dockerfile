@@ -5,7 +5,7 @@ ARG PGTAP_VERSION=1.2.1
 ARG PGTAP_VERSION_HASHREF=ff4a30b59d602ab7a3ea48ce91402fa9bc83abdf
 ARG PGTAP_DOWNLOAD
 
-FROM alpine:3.16 AS download
+FROM alpine:3.17 AS download
 
 ARG PGTAP_VERSION
 ARG PGTAP_VERSION_HASHREF
@@ -108,7 +108,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
     && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/10 \
     && rm -rf /var/cache/apk/* /tmp/*
 
-FROM alpine:3.16 AS build-pgtap
+FROM alpine:3.17 AS build-pgtap
 
 ARG PGTAP_VERSION
 
@@ -121,7 +121,7 @@ COPY --from=build-pgtap-psql-12 /opt/pgtap/12 /opt/pgtap/12
 COPY --from=build-pgtap-psql-11 /opt/pgtap/11 /opt/pgtap/11
 COPY --from=build-pgtap-psql-10 /opt/pgtap/10 /opt/pgtap/10
 
-FROM alpine:3.16
+FROM alpine:3.17
 
 ARG PGPROVE_VERSION
 ARG PGTAP_VERSION
