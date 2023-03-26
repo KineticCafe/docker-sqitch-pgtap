@@ -1,0 +1,26 @@
+name: Publish release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag to publish
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish Release
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_type == 'push'
+      - uses: actions/checkout@v3
+        if: github.event_type == 'workflow_dispatch'
+        with:
+          ref: refs/tags/${{ github.event.inputs.tag }}
+      - uses: eloquent/github-release-action@v3
+        with:
+          summaryEnabled: 'false'

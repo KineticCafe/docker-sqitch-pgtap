@@ -1,6 +1,9 @@
-name: CI/CD
+name: Build and Publish Image
 
 on:
+  release:
+    types:
+      - published
   push:
     branches:
       - 'main'
@@ -9,8 +12,6 @@ on:
   pull_request:
     branches:
       - 'main'
-  schedule:
-    - cron: '0 10 25 * *' # Monthly at 10am on the 25th
   workflow_dispatch:
 
 jobs:
@@ -18,45 +19,54 @@ jobs:
     name: Build and Push to Docker Hub
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v3
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
+      - uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
+        if: github.event_name == 'release'
         with:
-          # list of Docker images to use as base name for tags
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
+        if: github.event_name == 'release'
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96 # v4.3.0
+        with:
           images: |
             kineticcafe/sqitch-pgtap
+            ghcr.io/kineticcafe/sqitch-pgtap
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.0.') }}
-            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
             type=sha
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2
+
+      - uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # v2.1.0
+      - uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c # v2.5.0
+      - id: docker_build
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: |
             linux/amd64
             linux/arm64
             linux/arm/v7
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: peter-evans/dockerhub-description@202973a37c8a723405c0c5f0a71b6d99db470dae # v3.3.0
+        with:
+          repository: kineticcafe/sqitch-pgtap
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
