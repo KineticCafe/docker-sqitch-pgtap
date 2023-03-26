@@ -19,6 +19,8 @@ jobs:
     name: Build and Push to Docker Hub
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       - uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
         if: github.event_name == 'release'
         with:
@@ -50,19 +52,29 @@ jobs:
 
       - uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # v2.1.0
       - uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c # v2.5.0
+
+      - id: package-versions
+        run: echo "data=$(cat package-versions.json)" >> $GITHUB_OUTPUT
+
       - id: docker_build
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
         with:
           push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PG_PROVE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pg_prove.version }}
+            PGTAP_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pgtap.version }}
+            SQITCH_VERSION=${{ fromJSON(steps.package-versions.outputs.data).sqitch.version }}
           platforms: |
             linux/amd64
             linux/arm64
             linux/arm/v7
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
       - uses: peter-evans/dockerhub-description@202973a37c8a723405c0c5f0a71b6d99db470dae # v3.3.0
+        if: github.event_name == 'release'
         with:
           repository: kineticcafe/sqitch-pgtap
           username: ${{ secrets.DOCKERHUB_USERNAME }}

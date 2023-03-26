@@ -12,11 +12,7 @@ variables or on the command-line.
 This version of the container includes:
 
 - pgTAP 1.2.1 (via git, as 1.2.1 has not been released)
-  - Support for PostgreSQL 10, 11, 12, 13, 14, and 15
-  - Support for PostgreSQL 16 will be updated when there is an RC release
-  - Support for PostgreSQL 10 will be dropped in a future release, as there is
-    no Alpine 3.17 image (the latest image is for PostgreSQL 10.23 on alpine
-    3.16).
+  - Support for PostgreSQL 9.6, 10, 11, 12, 13, 14, and 15
 - pg_prove 3.36
 - Sqitch 1.3.1
 
