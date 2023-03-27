@@ -1,9 +1,3 @@
-FROM alpine:3.17 AS build-pgtap
-
-COPY pgtap.tar /tmp
-
-RUN tar xf /tmp/pgtap.tar
-
 FROM alpine:3.17
 
 ARG PG_PROVE_VERSION
@@ -12,15 +6,17 @@ ARG SQITCH_VERSION
 
 ENV __DOCKERFILE_VERSION__=2.1.0
 
-RUN apk add --no-cache --update \
+RUN apk update \
+    && apk add --no-cache --update \
         build-base \
         curl \
-        wget \
+        make \
         perl-dev \
         postgresql-dev \
-        make \
+        wget \
     && apk add --no-cache --update \
         bash \
+        jq \
         less \
         nano \
         openssl \
@@ -35,11 +31,18 @@ RUN apk add --no-cache --update \
     && adduser --disabled-password sqitch \
     && mkdir -p /opt /home/sqitch/bin \
     && echo $__DOCKERFILE_VERSION__ > /home/sqitch/VERSION \
-    && apk del curl wget postgresql-dev build-base make perl-dev \
+    && apk del \
+        build-base \
+        curl \
+        make \
+        perl-dev \
+        postgresql-dev \
+        wget \
     && rm -rf /var/cache/apk/* /tmp/* /root/.cpanm
 
-COPY --from=build-pgtap /opt/pgtap /opt/pgtap
+COPY opt/pgtap /opt/pgtap/
 COPY scripts/* /home/sqitch/bin/
+COPY package-versions.json /home/sqitch/
 RUN chmod +x /home/sqitch/bin/* \
     && chown -R sqitch:sqitch /home
 

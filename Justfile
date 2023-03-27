@@ -39,6 +39,8 @@ get-pgtap:
   docker container cp --quiet builder:/opt/pgtap.tar "{{ justfile_directory() }}"
   docker container rm builder
   docker image rm build-pgtap:latest
+  tar xf pgtap.tar
 
   rm -rf {{ justfile_directory() }}/build/pgtap/pgtap-"{{ pgtap_version }}" \
     {{ justfile_directory() }}/build/pgtap/pgtap-"{{ pgtap_version }}".zip \
+    {{ justfile_directory() }}/pgtap.tar

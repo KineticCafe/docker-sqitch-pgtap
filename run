@@ -8,11 +8,12 @@
 declare SQITCH_DBNAME SQITCH_TARGET cmd home_dest image uname_s user
 declare -a passopt
 
-declare STRUCTURE_TARGET TIMESTAMP bn0
+declare STRUCTURE_TARGET TIMESTAMP bn0 DEFAULT_IMAGE
+DEFAULT_IMAGE=ghcr.io/kineticcafe/sqitch-pgtap:2.1
 bn0="$(basename "$0")"
 STRUCTURE_TARGET="${STRUCTURE_TARGET:-structure.sql}"
 TIMESTAMP="${TIMESTAMP:-"$(date -u +%Y%m%d%H%M%S)"}"
-readonly STRUCTURE_TARGET TIMESTAMP bn0
+readonly DEFAULT_IMAGE STRUCTURE_TARGET TIMESTAMP bn0
 
 puts() {
   local message
@@ -45,6 +46,7 @@ get-current-docker-context() {
 set-command() {
   case "$1" in
   sh) cmd="$1" ;;
+  jq) cmd="$1" ;;
   nano) cmd=/home/sqitch/bin/do_nano ;;
   sqitch) cmd=/home/sqitch/bin/do_sqitch ;;
   pg_prove) cmd=/home/sqitch/bin/do_pg_prove ;;
@@ -119,7 +121,7 @@ apply-platform-options() {
 }
 
 setup() {
-  image=${IMAGE:-kineticcafe/sqitch-pgtap:2.0}
+  image=${IMAGE:-${DEFAULT_IMAGE}}
   user="${USER-$(whoami)}"
   uname_s="$(uname -s)"
 
@@ -348,7 +350,7 @@ EOS
 }
 
 clean-structure() {
-  sed <"$1" -e '/Dumped from database version/d' |
+  sed -e '/Dumped from database version/d' "$1" |
     sed -e '/Dumped by pg_dump version/d'
 }
 

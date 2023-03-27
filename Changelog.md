@@ -1,4 +1,21 @@
-# docker-sqitch-pgtap Changelog
+# kineticcafe/sqitch-pgtap Changelog
+
+## 2.1.1 / 2023-03-29
+
+- Copied `package-versions.json` to the built image. Added `jq` to the supported
+  tools.
+
+- Rather than committing `pgtap.tar`, we will be committing the generated files
+  for easier comparison.
+
+- Changed the `run` script to pull from ghcr.io by default instead of Docker
+  Hub and other `run` script improvements.
+
+- Fixed a bug with `do_pgtap` version detection depending on the configuration
+  of the local `.psqlrc`. It now explicitly does not load a `.psqlrc` file.
+
+- Changed `scripts/do_version` (version reporting) to properly report the pgtap
+  version, including the commit hashref if included.
 
 ## 2.1.0 / 2023-03-26
 

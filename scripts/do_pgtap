@@ -8,21 +8,24 @@ fi
 psql_server_version() {
   db="${PGDATABASE}"
   [[ -z "${db}" ]] && db=postgres
-  psql -q "${db}" -c '\t on' -c 'show server_version;'
+  psql --no-psqlrc --quiet --tuples-only --csv --dbname "${db}" --command 'show server_version;'
 }
 
 install_pgtap() {
-  psql "${PGDATABASE}" -f "/opt/pgtap/${version}/pgtap.sql" >/dev/null 2>&1
+  psql --no-psqlrc --quiet --dbname "${PGDATABASE}" \
+    -f "/opt/pgtap/${version}/pgtap.sql" >/dev/null 2>&1
 }
 
 uninstall_pgtap() {
-  psql "${PGDATABASE}" -f "/opt/pgtap/${version}/uninstall_pgtap.sql" >/dev/null 2>&1
-  psql "${PGDATABASE}" -c "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, TEXT);" \
-    -c "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, NAME, TEXT);" \
-    -c "DROP FUNCTION IF EXISTS col_not_null (NAME, NAME, TEXT);" \
-    -c "DROP FUNCTION IF EXISTS col_not_null (NAME, NAME, NAME, TEXT);" \
-    -c "DROP FUNCTION IF EXISTS finish (BOOLEAN);" \
-    -c "DROP FUNCTION IF EXISTS _finish (INTEGER, INTEGER, INTEGER, BOOLEAN);" \
+  psql --no-psqlrc --quiet --dbname "${PGDATABASE}" \
+    -f "/opt/pgtap/${version}/uninstall_pgtap.sql" >/dev/null 2>&1
+  psql --no-psqlrc --quiet --dbname "${PGDATABASE}" \
+    --command "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, TEXT);" \
+    --command "DROP FUNCTION IF EXISTS col_is_null (NAME, NAME, NAME, TEXT);" \
+    --command "DROP FUNCTION IF EXISTS col_not_null (NAME, NAME, TEXT);" \
+    --command "DROP FUNCTION IF EXISTS col_not_null (NAME, NAME, NAME, TEXT);" \
+    --command "DROP FUNCTION IF EXISTS finish (BOOLEAN);" \
+    --command "DROP FUNCTION IF EXISTS _finish (INTEGER, INTEGER, INTEGER, BOOLEAN);" \
     >/dev/null 2>&1
 }
 
