@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Publish Release
     steps:
-      - run: echo '${{ github | toJson }}'
+      - run: echo '${{ toJson(github) }}'
       - uses: actions/checkout@v3
         if: github.event_type == 'push'
       - uses: actions/checkout@v3
