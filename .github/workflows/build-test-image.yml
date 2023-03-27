@@ -1,41 +1,16 @@
-name: Build and Publish Image
+name: Build Test Image
 
 on:
-  # push:
-  #   branches:
-  #     - 'main'
-  #   tags:
-  #     - 'v*.*.*'
   pull_request:
     branches:
       - 'main'
-  workflow_call:
 
 jobs:
   build:
-    name: Build and Push to Docker Hub
+    name: Build Test Image
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
-        if: >-
-          github.event_name == 'workflow_call' ||
-          github.event_name == 'push' ||
-          github.event_name == 'workflow_dispatch'
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
-        if: >-
-          github.event_name == 'workflow_call' ||
-          github.event_name == 'push' ||
-          github.event_name == 'workflow_dispatch'
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: meta
         uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96 # v4.3.0
@@ -62,12 +37,8 @@ jobs:
       - id: docker_build
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
         with:
-          push: >-
-            ${{
-              github.event_name == 'workflow_call' ||
-              github.event_name == 'push' ||
-              github.event_name == 'workflow_dispatch'
-            }}
+          context: .
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -80,16 +51,3 @@ jobs:
             linux/arm/v7
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - uses: peter-evans/dockerhub-description@202973a37c8a723405c0c5f0a71b6d99db470dae # v3.3.0
-        if: >-
-          github.event_name == 'workflow_call' ||
-          github.event_name == 'push' ||
-          github.event_name == 'workflow_dispatch'
-        with:
-          repository: kineticcafe/sqitch-pgtap
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
