@@ -1,5 +1,31 @@
 # docker-sqitch-pgtap Changelog
 
+## 2.1.0 / 2023-03-26
+
+- Changed how the primary docker image is built by using a secondary docker
+  image. This has been done primarily to speed up the build process under GitHub
+  Actions as we build for `linux/amd64`, `linux/arm64`, and `linux/arm/v7`, and
+  the construction of the pgTAP scripts did not need to be repeated three times
+  (there is no difference based on the architecture, just on the PostgreSQL
+  version).
+
+  This change means that we can support more versions of PostgreSQL without
+  caring about released base image as there are no compiled files. As such, we
+  have re-added support for PostgreSQL 9.6 on a best-effort basis.
+
+- Added a [Maintenance](Maintenance.md) document.
+
+- Docker build arguments are no longer defaulted in the main `Dockerfile`, but
+  are stored in `package-versions.json`. The `Justfile` reads these for use with
+  the `build` target (`just build`) and the GitHub Actions workflow via
+  `fromJson`.
+
+- Update support for the released version of PostgreSQL 15.
+
+- Update base Alpine version to 3.17.
+
+- Add GHCR publishing.
+
 ## 2.0.1 / 2022-10-04
 
 - Update sqitch version to 1.3.1.
@@ -63,3 +89,6 @@
 ## 1.0 / 2021-05-16
 
 - Initial released version.
+
+[extractions/setup-just]: https://github.com/extractions/setup-just
+[casey/just]: https://github.com/casey/just

@@ -36,17 +36,17 @@ version=$(psql_server_version | tr -d ' \t\n\v\r')
 case "${version}" in
 9.6*)
   cat >&2 <<ERROR
-Unsupported version of PostgreSQL 9.6. If PostgreSQL 9.6 is still required, use
-image kineticcafe/sqitch-pgtap:1.1.0.
+PostgreSQL 9.6 has reached end of life and support for it is on a best-effort
+basis.
 ERROR
-  exit 1
+  version=9.6
   ;;
 10*) version=10 ;;
 11*) version=11 ;;
 12*) version=12 ;;
 13*) version=13 ;;
 14*) version=14 ;;
-15*) version=15 ;; # This is beta support
+15*) version=15 ;;
 *)
   echo >&2 "Unknown or unsupported PostgreSQL version '${version}'."
   exit 1

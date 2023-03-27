@@ -3,3 +3,4 @@
 *.bz2
 *.zip
 /snowflake/*.bash
+/build/pgtap/pgtap-*

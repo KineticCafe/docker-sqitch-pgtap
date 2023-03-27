@@ -5,11 +5,11 @@
 # script. All configuration is handled by defaults, parameters, or environment
 # variables.
 
-declare SQITCH_DBNAME SQITCH_TARGET cmd home_dest image tz uname_s user
+declare SQITCH_DBNAME SQITCH_TARGET cmd home_dest image uname_s user
 declare -a passopt
 
 declare STRUCTURE_TARGET TIMESTAMP bn0
-bn0="$(basename $0)"
+bn0="$(basename "$0")"
 STRUCTURE_TARGET="${STRUCTURE_TARGET:-structure.sql}"
 TIMESTAMP="${TIMESTAMP:-"$(date -u +%Y%m%d%H%M%S)"}"
 readonly STRUCTURE_TARGET TIMESTAMP bn0
@@ -72,7 +72,7 @@ has-command() {
 }
 
 has-function() {
-  LC_ALL=C [ "$(type -t "$1")" == 'function' ]
+  LC_ALL=C test "$(type -t "$1")" == function
 }
 
 fail() {
@@ -104,16 +104,13 @@ fail-unless() {
 apply-platform-options() {
   case "${uname_s}" in
   Linux*)
-    [ -L /etc/localtime ] && tz=$(readlink /etc/localtime | sed -e 's!/usr/share/zoneinfo/!!')
-    passopt+=(-e "SQITCH_ORIG_FULLNAME=$(getent passwd ${user} | cut -d: -f5 | cut -d, -f1)")
-    passopt+=(-u $(id -u ${user}):$(id -g ${user}))
+    passopt+=(--env "SQITCH_ORIG_FULLNAME=$(getent passwd "${user}" | cut -d: -f5 | cut -d, -f1)")
     ;;
   Darwin*)
-    [ -L /etc/localtime ] && tz=$(readlink /etc/localtime | sed -e 's!/var/db/timezone/zoneinfo/!!')
-    passopt+=(-e "SQITCH_ORIG_FULLNAME=$(/usr/bin/id -P ${user} | awk -F '[:]' '{print $8}')")
+    passopt+=(--env "SQITCH_ORIG_FULLNAME=$(/usr/bin/id -P "${user}" | awk -F '[:]' '{print $8}')")
     ;;
   MINGW* | CYGWIN*)
-    passopt+=(-e "SQITCH_ORIG_FULLNAME=$(net user ${user})")
+    passopt+=(--env "SQITCH_ORIG_FULLNAME=$(net user "${user}")")
     ;;
   *)
     fail 2 "Unknown OS: ${uname_s}"
@@ -122,7 +119,7 @@ apply-platform-options() {
 }
 
 setup() {
-  image=${IMAGE:-kineticcafe/sqitch-pgtap:1.1}
+  image=${IMAGE:-kineticcafe/sqitch-pgtap:2.0}
   user="${USER-$(whoami)}"
   uname_s="$(uname -s)"
 
@@ -132,21 +129,29 @@ setup() {
   apply-platform-options
 
   passopt=(
-    -e "SQITCH_ORIG_SYSUSER=${user}"
-    -e "SQITCH_ORIG_EMAIL=${user}@$(hostname)"
-    -e "TZ=Etc/UTC"
-    -e "LESS=${LESS:--R}"
-    -e "HOME=${home_dest}"
+    --env "SQITCH_ORIG_SYSUSER=${user}"
+    --env "SQITCH_ORIG_EMAIL=${user}@$(hostname)"
+    --env "TZ=Etc/UTC"
+    --env "LESS=${LESS:--R}"
+    --env "HOME=${home_dest}"
   )
 
   local var docker_host
 
-  case "$(get-current-docker-context)" in
-  colima) docker_host="host.lima.internal" ;;
-  *) docker_host="host.docker.internal" ;;
-  esac
+  if [[ -z "${PGHOST:-}" ]]; then
+    case "$(get-current-docker-context)" in
+    colima*) docker_host="host.lima.internal" ;;
+    *) docker_host="host.docker.internal" ;;
+    esac
 
-  PGHOST="${PGHOST:-${docker_host}}"
+    # This requires Docker 20.04 or later.
+    case "${uname_s}" in
+    Linux*) passopt+=(--add-host=host.docker.internal:host-gateway) ;;
+    esac
+
+    PGHOST="${docker_host}"
+  fi
+
   PGPORT="${PGPORT:-5432}"
 
   [[ "${uname_s}" == Darwin ]] && PGUSER="${PGUSER:-${USER}}"
@@ -161,19 +166,19 @@ setup() {
     PGSSLMODE PGREQUIRESSL PGSSLCOMPRESSION PGREQUIREPEER PGKRBSRVNAME \
     PGKRBSRVNAME PGGSSLIB PGCONNECT_TIMEOUT PGCLIENTENCODING \
     PGTARGETSESSIONATTRS; do
-    [[ -n "${!var}" ]] && passopt+=("-e" "${var}=${!var}")
+    [[ -n "${!var}" ]] && passopt+=(--env "${var}=${!var}")
   done
 
   local default_target
   default_target="$(get-sqitch-config --get engine.pg.target)"
 
   SQITCH_TARGET="${SQITCH_TARGET:-${default_target}}"
-  passopt+=(-e "SQITCH_TARGET=${SQITCH_TARGET}")
+  passopt+=(--env "SQITCH_TARGET=${SQITCH_TARGET}")
   SQITCH_DBNAME="${SQITCH_DBNAME:-$(
     get-sqitch-config --get target."${SQITCH_TARGET}".uri | sed -e 's/^db:pg://'
   )}"
 
-  passopt+=(-e "PGDATABASE=${PGDATABASE:-${SQITCH_DBNAME}}")
+  passopt+=(--env "PGDATABASE=${PGDATABASE:-${SQITCH_DBNAME}}")
 
   readonly SQITCH_TARGET SQITCH_DBNAME image user uname_s home_dest
 }
@@ -193,12 +198,12 @@ very-quiet() {
 run() {
   (($#)) || fail "No command given to run."
 
-  local v cmd
+  local cmd
 
   set-command "$1" || fail "Unsupported run command '$1'."
   shift
 
-  docker run -it --rm --network host \
+  docker run "${interactive[@]}" --rm --network host \
     --mount "type=bind,src=$(pwd),dst=/repo" \
     --mount "type=bind,src=${HOME},dst=${home_dest},readonly" \
     --user "$(id -u):$(id -g)" \
@@ -343,8 +348,7 @@ EOS
 }
 
 clean-structure() {
-  cat "$1" |
-    sed -e '/Dumped from database version/d' |
+  sed <"$1" -e '/Dumped from database version/d' |
     sed -e '/Dumped by pg_dump version/d'
 }
 
@@ -398,7 +402,9 @@ run-structure() {
   "${clean}" && quiet must-run dropdb "${dbname}"
 
   if "${compare}"; then
-    [[ -z "${CI}" ]] && PAGER=
+    if [[ -n "${CI}" ]] || [[ -n "${GITHUB_ACTIONS}" ]]; then
+      export PAGER=
+    fi
 
     diff -u \
       <(clean-structure "${STRUCTURE_TARGET}") \
@@ -476,8 +482,8 @@ run-release() {
   if [[ -z "${tarball}" ]]; then
     if very-quiet git remote get-url origin; then
       tarball="$(basename "$(git remote get-url origin)" .git)"
-    elif very-quiet git rev-parse --show-cdup; then
-      tarball="$(basename "$(cd "${PWD}/$(git rev-parse --show-cdup)")")"
+    elif very-quiet git rev-parse --show-toplevel; then
+      tarball="$(basename "$(git rev-parse --show-toplevel)")"
     else
       tarball="$(basename "${PWD}")"
     fi
@@ -528,12 +534,26 @@ run-help() {
 cmd="$1"
 shift
 
+declare -a args interactive
+interactive=(-it)
+
+while (($#)); do
+  case "$1" in
+  --non-interactive) interactive=() ;;
+  *) args+=("$1") ;;
+  esac
+
+  shift
+done
+
+[[ -t 0 ]] || interactive=()
+
 if has-function "run-${cmd}"; then
   setup
-  run-"${cmd}" "$@"
+  run-"${cmd}" "${args[@]}"
 elif has-command "${cmd}"; then
   setup
-  run "${cmd}" "$@"
+  run "${cmd}" "${args[@]}"
 elif [[ -z "${cmd}" ]]; then
   usage
 else
