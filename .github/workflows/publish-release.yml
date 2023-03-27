@@ -25,4 +25,4 @@ jobs:
         with:
           summaryEnabled: false
   publish-image:
-    uses: .github/workflows/build-and-push.yml@main
+    uses: ./.github/workflows/build-and-push.yml@main
