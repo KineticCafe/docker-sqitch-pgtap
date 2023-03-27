@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Publish Release
     steps:
+      - run: echo ${{ github.event_type }}
       - uses: actions/checkout@v3
         if: github.event_type == 'push'
       - uses: actions/checkout@v3
@@ -22,5 +23,3 @@ jobs:
         with:
           ref: refs/tags/${{ github.event.inputs.tag }}
       - uses: eloquent/github-release-action@v3
-        with:
-          summaryEnabled: 'false'

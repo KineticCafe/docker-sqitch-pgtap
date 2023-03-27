@@ -1,6 +1,10 @@
 # kineticcafe/sqitch-pgtap Maintenance
 
-Maintenance of kineticcafe/sqitch-pgtap is fairly easy but has some intricacies.
+Maintenance of kineticcafe/sqitch-pgtap is fairly easy but has some points worth
+documenting.
+
+On every release, remember to update the `pgtap.tar` cache with `just
+get-pgtap`.
 
 ## Updating Package Versions
 
@@ -17,7 +21,7 @@ jq -c < package-versions.json | sponge package-versions.json
 
 ### Update `pg_prove`
 
-To `pg_prove`, update `pg_prove.version` in `package-versions.json`. That
+To update `pg_prove`, update `pg_prove.version` in `package-versions.json`. That
 version of `pg_prove` will be installed during the build of the Docker image.
 
 ### Update `pgtap`
@@ -34,8 +38,8 @@ This cache file can be updated with `just get-pgtap` (this requires
 
 ### Update `sqitch`
 
-To `sqitch`, update `sqitch.version` in `package-versions.json`. That version of
-`sqitch` will be installed during the build of the Docker image.
+To update `sqitch`, update `sqitch.version` in `package-versions.json`. That
+version of `sqitch` will be installed during the build of the Docker image.
 
 ## Adding or Removing PostgreSQL Versions
 
@@ -70,9 +74,6 @@ PostgreSQL versions require updating in multiple places:
     ```dockerfile
     COPY --from=build-pgtap-psql-<VERSION> /opt/pgtap/<VERSION> /opt/pgtap/<VERSION>
     ```
-
-When a new version PostgreSQL version is updated, the `pgtap.tar` cache must be
-updated with `just get-pgtap`.
 
 ## Updating Docker Base Images
 
