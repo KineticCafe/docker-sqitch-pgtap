@@ -3,7 +3,7 @@ name: Build and Publish Image
 on:
   release:
     types:
-      - published
+      - released
   # push:
   #   branches:
   #     - 'main'
