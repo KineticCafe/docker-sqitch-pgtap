@@ -12,23 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - id: meta
-        uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96 # v4.3.0
-        with:
-          images: |
-            kineticcafe/sqitch-pgtap
-            ghcr.io/kineticcafe/sqitch-pgtap
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
-
-      - uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # v2.1.0
       - uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c # v2.5.0
 
       - id: package-versions
@@ -39,15 +22,13 @@ jobs:
         with:
           context: .
           push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          load: true
+          tags: kineticcafe/sqitch-pgtap:test
           build-args: |
             PG_PROVE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pg_prove.version }}
             PGTAP_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pgtap.version }}
             SQITCH_VERSION=${{ fromJSON(steps.package-versions.outputs.data).sqitch.version }}
-          platforms: |
-            linux/amd64
-            linux/arm64
-            linux/arm/v7
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
+      - run: ./run version
+        env:
+          IMAGE: kineticcafe/sqitch-pgtap:test

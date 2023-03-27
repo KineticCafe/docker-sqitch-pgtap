@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-Copyright © 2021 Kinetic Cafe
+Copyright © 2021–2023 Kinetic Commerce
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the \"Software\"), to deal in
@@ -24,12 +24,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 This repository includes instructions to build a Docker container that
 explicitly incorporates:
 
-- [Alpine Linux]: GNU GPL v2
-- [sqitch]: [MIT][sqitch-mit]
-- [pgtap]: [Modified MIT][pgtap-mit]
+- [Alpine Linux][]: GNU GPL v2
+- [sqitch][]: [MIT][sqitch-mit]
+- [pgTAP][]: [Modified MIT][pgtap-mit]
 - [TAP::Parser::SourceHandler::pgTAP][theory/tap-parser-sourcehandler-pgtap]:
   [Perl][pgtap-perl]
-- [nano]: GNU GPL v3
+- [nano][]: GNU GPL v3
+- [jq][]: [Modified MIT + CC BY 3.0][jq-mit]
 
 This Docker container was developed in part from examples provided by:
 
@@ -38,7 +39,10 @@ This Docker container was developed in part from examples provided by:
 - [LREN-CHUV/docker-pgtap]: [Apache 2.0][docker-pgtap-apache]
 - [disaykin/pgtap-docker-image]: [BSD 3-Clause][pgtap-docker-image-bsd]
 
-The scripts were developed based on scripts in the above repositories.
+The scripts were developed based on scripts in the above repositories but have
+since diverged extensively. For build performance purposes, version-specific
+copies of the [pgTAP][] code are kept in `opt/pgtap` and are covered under the
+original [pgTAP licence][pgtap-mit].
 
 [disaykin/pgtap-docker-image]: https://github.com/disaykin/pgtap-docker-image
 [docker-sqitch-mit]: https://github.com/sqitchers/docker-sqitch/blob/main/LICENSE.md
@@ -54,3 +58,4 @@ The scripts were developed based on scripts in the above repositories.
 [nano]: https://www.nano-editor.org
 [docker-pgtap-apache]: https://github.com/LREN-CHUV/docker-pgtap/blob/master/LICENSE
 [pgtap-docker-image-bsd]: https://github.com/disaykin/pgtap-docker-image/blob/master/LICENSE
+[jq-mit]: https://github.com/stedolan/jq/blob/master/COPYING
