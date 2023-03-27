@@ -1,9 +1,6 @@
 name: Build and Publish Image
 
 on:
-  release:
-    types:
-      - released
   # push:
   #   branches:
   #     - 'main'
@@ -13,6 +10,7 @@ on:
     branches:
       - 'main'
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:

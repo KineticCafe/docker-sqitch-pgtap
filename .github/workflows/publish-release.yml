@@ -11,9 +11,9 @@ on:
         required: true
 
 jobs:
-  publish:
+  make-release:
     runs-on: ubuntu-latest
-    name: Publish Release
+    name: Create Release
     steps:
       - uses: actions/checkout@v3
         if: github.event_name == 'push'
@@ -24,3 +24,5 @@ jobs:
       - uses: eloquent/github-release-action@v3
         with:
           summaryEnabled: false
+  publish-image:
+    uses: .github/workflows/build-and-push.yml
