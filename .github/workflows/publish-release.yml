@@ -15,11 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     name: Publish Release
     steps:
-      - run: echo '${{ toJson(github) }}'
       - uses: actions/checkout@v3
-        if: github.event_type == 'push'
+        if: github.event_name == 'push'
       - uses: actions/checkout@v3
-        if: github.event_type == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         with:
           ref: refs/tags/${{ github.event.inputs.tag }}
       - uses: eloquent/github-release-action@v3
+        with:
+          summaryEnabled: false
