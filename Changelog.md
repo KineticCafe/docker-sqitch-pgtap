@@ -1,5 +1,21 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.2.0 / 2023-05-15
+
+- Added explicit support for the internal macOS hostname under
+  [Orbstack][orbstack-internal].
+
+- Extended Dependabot configuration to look at `build/pgtap/Dockerfile` as well
+  as the root `Dockerfile.`
+
+- Upgraded base image to Alpine 3.18.
+
+- Added code to work around an unnecessary warning from `docker context ls` when
+  `$DOCKER_HOST` is already set.
+
+- Changed logic for adding `--add-host=host.docker.internal:host-gateway` under
+  Linux.
+
 ## 2.1.1 / 2023-03-29
 
 - Copied `package-versions.json` to the built image. Added `jq` to the supported
@@ -109,3 +125,4 @@
 
 [extractions/setup-just]: https://github.com/extractions/setup-just
 [casey/just]: https://github.com/casey/just
+[orbstack-internal]: https://docs.orbstack.dev/machines/network#connecting-to-servers-on-mac

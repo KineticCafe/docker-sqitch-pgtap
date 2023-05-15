@@ -5,7 +5,7 @@ This is a simple Docker container that contains [sqitch][], [pgTAP][], and
 to work with `sqitch` and `pg_prove`/`pgTAP` without going through the effort of
 installing them on various systems.
 
-The image is based on Alpine (3.17) and does not include a PostgreSQL server;
+The image is based on Alpine (3.18) and does not include a PostgreSQL server;
 instead, it is expected that all values will be provided through environment
 variables or on the command-line.
 

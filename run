@@ -39,8 +39,12 @@ has() {
 }
 
 get-current-docker-context() {
-  docker context ls --format '{{ . | json }}' |
-    jq -sr '.[] | select(.Current == true) | .Name'
+  if [[ -n "${DOCKER_HOST}" ]]; then
+    echo "${DOCKER_HOST}"
+  else
+    docker context ls --format '{{ . | json }}' |
+      jq -sr '.[] | select(.Current == true) | .Name'
+  fi
 }
 
 set-command() {
@@ -142,14 +146,19 @@ setup() {
 
   if [[ -z "${PGHOST:-}" ]]; then
     case "$(get-current-docker-context)" in
-    colima*) docker_host="host.lima.internal" ;;
+    colima | colima-* | unix:*/.colima/*) docker_host="host.lima.internal" ;;
+    orbstack) docker_host="host.internal" ;;
     *) docker_host="host.docker.internal" ;;
     esac
 
+    # TODO:
+    # - How to support Podman?
+    # - How to support containerd/nerdctl?
+
     # This requires Docker 20.04 or later.
-    case "${uname_s}" in
-    Linux*) passopt+=(--add-host=host.docker.internal:host-gateway) ;;
-    esac
+    if [[ "${docker_host}" == "host.docker.internal" ]] && [[ "${uname_s}" =~ ^Linux ]]; then
+      passopt+=(--add-host=host.docker.internal:host-gateway)
+    fi
 
     PGHOST="${docker_host}"
   fi
