@@ -12,7 +12,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
     && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/15 \
     && rm -rf /var/cache/apk/* /tmp/*
 
-FROM postgres:14-alpine3.18 AS build-pgtap-psql-14
+FROM postgres:15-alpine3.18 AS build-pgtap-psql-14
 
 ARG PGTAP_VERSION
 
@@ -26,7 +26,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
     && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/14 \
     && rm -rf /var/cache/apk/* /tmp/*
 
-FROM postgres:13-alpine3.18 AS build-pgtap-psql-13
+FROM postgres:15-alpine3.18 AS build-pgtap-psql-13
 
 ARG PGTAP_VERSION
 
@@ -40,7 +40,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
     && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/13 \
     && rm -rf /var/cache/apk/* /tmp/*
 
-FROM postgres:12-alpine3.18 as build-pgtap-psql-12
+FROM postgres:15-alpine3.18 as build-pgtap-psql-12
 
 ARG PGTAP_VERSION
 
@@ -54,7 +54,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
     && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/12 \
     && rm -rf /var/cache/apk/* /tmp/*
 
-FROM postgres:11-alpine3.18 AS build-pgtap-psql-11
+FROM postgres:15-alpine3.18 AS build-pgtap-psql-11
 
 ARG PGTAP_VERSION
 
@@ -68,7 +68,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
     && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/11 \
     && rm -rf /var/cache/apk/* /tmp/*
 
-FROM postgres:10-alpine3.16 AS build-pgtap-psql-10
+FROM postgres:15-alpine3.16 AS build-pgtap-psql-10
 
 ARG PGTAP_VERSION
 
@@ -82,7 +82,7 @@ RUN apk add --no-cache --update perl wget postgresql-dev openssl \
     && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/10 \
     && rm -rf /var/cache/apk/* /tmp/*
 
-FROM postgres:9.6-alpine3.15 AS build-pgtap-psql-9.6
+FROM postgres:14.3-alpine3.15 AS build-pgtap-psql-9.6
 
 ARG PGTAP_VERSION
 
