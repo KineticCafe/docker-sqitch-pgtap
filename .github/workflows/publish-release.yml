@@ -21,7 +21,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         with:
           ref: refs/tags/${{ github.event.inputs.tag }}
-      - uses: eloquent/github-release-action@v4
+      - uses: ghalactic/github-release-action@v4
         with:
           summaryEnabled: false
   publish-image:
