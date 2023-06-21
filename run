@@ -9,7 +9,7 @@ declare SQITCH_DBNAME SQITCH_TARGET cmd home_dest image uname_s user
 declare -a passopt
 
 declare STRUCTURE_TARGET TIMESTAMP bn0 DEFAULT_IMAGE
-DEFAULT_IMAGE=ghcr.io/kineticcafe/sqitch-pgtap:2.1
+DEFAULT_IMAGE=ghcr.io/kineticcafe/sqitch-pgtap:2
 bn0="$(basename "$0")"
 STRUCTURE_TARGET="${STRUCTURE_TARGET:-structure.sql}"
 TIMESTAMP="${TIMESTAMP:-"$(date -u +%Y%m%d%H%M%S)"}"
