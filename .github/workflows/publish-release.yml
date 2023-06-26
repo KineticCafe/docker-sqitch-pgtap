@@ -86,7 +86,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - uses: peter-evans/dockerhub-description@v3.4.1
+      - uses: peter-evans/dockerhub-description@v3.4.2
         with:
           repository: kineticcafe/sqitch-pgtap
           username: ${{ secrets.DOCKERHUB_USERNAME }}
