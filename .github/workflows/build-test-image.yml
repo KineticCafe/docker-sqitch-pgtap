@@ -31,6 +31,8 @@ jobs:
             PG_PROVE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pg_prove.version }}
             PGTAP_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pgtap.version }}
             SQITCH_VERSION=${{ fromJSON(steps.package-versions.outputs.data).sqitch.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - run: ./run version
         env:

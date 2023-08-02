@@ -11,31 +11,31 @@ variables or on the command-line.
 
 This version of the container includes:
 
-- pgTAP 1.2.1 (via git at `56c591fc3bf6b2dba49e15739625916d49e3fc27`)
+- pgTAP 1.2.1 (via git at `96a7a416311ea5f2fa140f59cfdf7c7afbded17c`)
   - Support for PostgreSQL 9.6, 10, 11, 12, 13, 14, and 15
 - pg_prove 3.36
-- Sqitch 1.3.1
+- Sqitch 1.4.0
 
 The version of pgTAP is installed and uninstalled as needed; unit test files
 _must not_ `CREATE EXTENSION pgtap`.
 
 These images can be pulled either from Docker Hub
-(`kineticcafe/sqitch-pgtap:2.1`) or the GitHub Container Registry
-(`ghcr.io/kineticcafe/sqitch-pgtap:2.1`).
+(`kineticcafe/sqitch-pgtap:2.3`) or the GitHub Container Registry
+(`ghcr.io/kineticcafe/sqitch-pgtap:2.3`).
 
 ## `run` script Commands
 
 The `run` script is recommended for running everything as it manages environment
 variable configuration for each run. The `run` script will pull from
-`ghcr.io/kineticcafe/sqitch-pgtap:2.1` by default; this can be overridden by
+`ghcr.io/kineticcafe/sqitch-pgtap:2.3` by default; this can be overridden by
 using `$IMAGE`:
 
 ```console
 $ IMAGE=kineticcafe/sqitch-pgtap:latest ./run version
-[gchr.io/]kineticcafe/sqitch-pgtap:2.1.0
+[gchr.io/]kineticcafe/sqitch-pgtap:2.3.0
 
-  sqitch (App::Sqitch) v1.3.1
-  pgtap 1.2.1 (56c591fc3bf6b2dba49e15739625916d49e3fc27)
+  sqitch (App::Sqitch) v1.4.0
+  pgtap 1.2.1 (96a7a416311ea5f2fa140f59cfdf7c7afbded17c)
   pg_prove 3.36
 ```
 

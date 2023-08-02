@@ -1,3 +1,17 @@
+FROM postgres:16beta2-alpine3.18 AS build-pgtap-psql-16
+
+ARG PGTAP_VERSION
+
+COPY pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
+
+RUN apk add --no-cache --update perl wget postgresql-dev openssl \
+        build-base make perl-dev bash \
+    && mkdir -p /opt/pgtap/16 \
+    && cd /opt/pgtap-$PGTAP_VERSION \
+    && make && make install \
+    && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/16 \
+    && rm -rf /var/cache/apk/* /tmp/*
+
 FROM postgres:15-alpine3.18 AS build-pgtap-psql-15
 
 ARG PGTAP_VERSION
@@ -102,6 +116,7 @@ ARG PGTAP_VERSION
 
 RUN mkdir -p /opt/pgtap
 
+COPY --from=build-pgtap-psql-16 /opt/pgtap/16 /opt/pgtap/16
 COPY --from=build-pgtap-psql-15 /opt/pgtap/15 /opt/pgtap/15
 COPY --from=build-pgtap-psql-14 /opt/pgtap/14 /opt/pgtap/14
 COPY --from=build-pgtap-psql-13 /opt/pgtap/13 /opt/pgtap/13

@@ -1,1 +1,1 @@
-{"pg_prove":{"version":"3.36"},"pgtap":{"version":"1.2.1","hashref":"56c591fc3bf6b2dba49e15739625916d49e3fc27"},"sqitch":{"version":"1.3.1"}}
+{"pg_prove":{"version":"3.36"},"pgtap":{"version":"1.2.1","hashref":"96a7a416311ea5f2fa140f59cfdf7c7afbded17c"},"sqitch":{"version":"1.4.0"},"VERSION":"2.2.0"}

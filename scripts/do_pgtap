@@ -34,22 +34,30 @@ cd /repo || {
   exit 1
 }
 
+eol() {
+  cat >&2 <<ERROR
+PostgreSQL $1 has reached end of life and support as of $2. Support is provided
+on a best-effort basis.
+ERROR
+}
+
 version=$(psql_server_version | tr -d ' \t\n\v\r')
 
 case "${version}" in
 9.6*)
-  cat >&2 <<ERROR
-PostgreSQL 9.6 has reached end of life and support for it is on a best-effort
-basis.
-ERROR
+  eol 9.6 2021-11-11
   version=9.6
   ;;
-10*) version=10 ;;
+10*)
+  eol 10 2022-11-10
+  version=10
+  ;;
 11*) version=11 ;;
 12*) version=12 ;;
 13*) version=13 ;;
 14*) version=14 ;;
 15*) version=15 ;;
+16*) version=16 ;;
 *)
   echo >&2 "Unknown or unsupported PostgreSQL version '${version}'."
   exit 1
