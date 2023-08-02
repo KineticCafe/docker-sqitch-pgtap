@@ -1,5 +1,16 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.3.0 / 2023-08-03
+
+- Upgraded sqitch version to 1.4.0
+
+- Upgraded pgTAP to 1.2.1 at theory/pgtap@96a7a416311ea5f2fa140f59cfdf7c7afbded17c.
+
+- Added PostgreSQL 16 beta 2 for testing.
+
+- Marked PostgreSQL 10 support as best effort since it is already at end of
+  life.
+
 ## 2.2.0 / 2023-05-15
 
 - Added explicit support for the internal macOS hostname under

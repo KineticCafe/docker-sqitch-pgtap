@@ -4,7 +4,9 @@ declare pgtap_version pgtap_hashref
 pgtap_version="$(jq -r .pgtap.version /home/sqitch/package-versions.json)"
 pgtap_hashref="$(jq -r .pgtap.hashref /home/sqitch/package-versions.json)"
 
-[[ -n "${pgtap_hashref}" ]] && pgtap_version="${pgtap_version} (${pgtap_hashref})"
+if [[ -n "${pgtap_hashref}" ]] && [[ "${pgtap_hashref}" != null ]]; then
+  pgtap_version="${pgtap_version} (${pgtap_hashref})"
+fi
 
 cat <<EOS
 [gchr.io/]kineticcafe/sqitch-pgtap:$(cat /home/sqitch/VERSION)
