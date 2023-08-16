@@ -1,0 +1,1 @@
+opt/**/*.sql -diff -merge linguist-generated=true

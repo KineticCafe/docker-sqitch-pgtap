@@ -1,4 +1,4 @@
-FROM postgres:16beta2-alpine3.18 AS build-pgtap-psql-16
+FROM postgres:16beta3-alpine3.18 AS build-pgtap-psql-16
 
 ARG PGTAP_VERSION
 

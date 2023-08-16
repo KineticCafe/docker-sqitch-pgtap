@@ -116,3 +116,6 @@ Docker base images must be kept up to date. These should be updated based on the
 latest available Alpine version for each version of PostgreSQL used in
 `build/pgtap/Dockerfile`, and the final release should be the latest available
 Alpine version.
+
+[pgxn]: https://pgxn.org/dist/pgtap
+[casey/just]: https://github.com/casey/just

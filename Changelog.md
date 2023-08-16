@@ -1,8 +1,14 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.4.0 / 2023-08-16
+
+- Upgraded pgTAP to 1.3.0.
+
+- Updated PostgreSQL 16 beta 2 to PostgreSQL beta 3
+
 ## 2.3.0 / 2023-08-03
 
-- Upgraded sqitch version to 1.4.0
+- Upgraded sqitch version to 1.4.0.
 
 - Upgraded pgTAP to 1.2.1 at theory/pgtap@96a7a416311ea5f2fa140f59cfdf7c7afbded17c.
 
