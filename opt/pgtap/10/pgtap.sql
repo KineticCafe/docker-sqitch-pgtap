@@ -19,7 +19,7 @@ RETURNS TEXT AS 'SELECT ''linux''::text;'
 LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION pgtap_version()
-RETURNS NUMERIC AS 'SELECT 1.2;'
+RETURNS NUMERIC AS 'SELECT 1.3;'
 LANGUAGE SQL IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION plan( integer )
@@ -1454,26 +1454,24 @@ RETURNS TEXT AS $$
        AND NOT a.attisdropped
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION _typename ( NAME )
+RETURNS TEXT AS $$
+BEGIN RETURN $1::REGTYPE;
+EXCEPTION WHEN undefined_object THEN RETURN $1;
+END;
+$$ LANGUAGE PLPGSQL STABLE;
+
 CREATE OR REPLACE FUNCTION _quote_ident_like(TEXT, TEXT)
 RETURNS TEXT AS $$
 DECLARE
-    have    TEXT;
-    pcision TEXT;
+    typname TEXT := _typename($1);
+    pcision TEXT := COALESCE(substring($1 FROM '[(][^")]+[)]$'), '');
 BEGIN
     -- Just return it if rhs isn't quoted.
-    IF $2 !~ '"' THEN RETURN $1; END IF;
+    IF $2 !~ '"' THEN RETURN typname || pcision; END IF;
 
-    -- If it's quoted ident without precision, return it quoted.
-    IF $2 ~ '"$' THEN RETURN quote_ident($1); END IF;
-
-    pcision := substring($1 FROM '[(][^")]+[)]$');
-
-    -- Just quote it if thre is no precision.
-    if pcision IS NULL THEN RETURN quote_ident($1); END IF;
-
-    -- Quote the non-precision part and concatenate with precision.
-    RETURN quote_ident(substring($1 FOR char_length($1) - char_length(pcision)))
-        || pcision;
+    -- Otherwise return it with the type part quoted.
+    RETURN quote_ident(typname) || pcision;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -4247,6 +4245,7 @@ RETURNS TEXT AS $$
     );
 $$ LANGUAGE SQL;
 
+-- _op_exists( left_type, schema, name, right_type, return_type )
 CREATE OR REPLACE FUNCTION _op_exists ( NAME, NAME, NAME, NAME, NAME )
 RETURNS BOOLEAN AS $$
     SELECT EXISTS (
@@ -4256,13 +4255,14 @@ RETURNS BOOLEAN AS $$
         WHERE n.nspname = $2
           AND o.oprname = $3
           AND CASE o.oprkind WHEN 'l' THEN $1 IS NULL
-              ELSE _cmp_types(o.oprleft, $1) END
+              ELSE _cmp_types(o.oprleft, _typename($1)) END
           AND CASE o.oprkind WHEN 'r' THEN $4 IS NULL
-              ELSE _cmp_types(o.oprright, $4) END
+              ELSE _cmp_types(o.oprright, _typename($4)) END
           AND _cmp_types(o.oprresult, $5)
    );
 $$ LANGUAGE SQL;
 
+-- _op_exists( left_type, name, right_type, return_type )
 CREATE OR REPLACE FUNCTION _op_exists ( NAME, NAME, NAME, NAME )
 RETURNS BOOLEAN AS $$
     SELECT EXISTS (
@@ -4271,13 +4271,14 @@ RETURNS BOOLEAN AS $$
         WHERE pg_catalog.pg_operator_is_visible(o.oid)
           AND o.oprname = $2
           AND CASE o.oprkind WHEN 'l' THEN $1 IS NULL
-              ELSE _cmp_types(o.oprleft, $1) END
+              ELSE _cmp_types(o.oprleft, _typename($1)) END
           AND CASE o.oprkind WHEN 'r' THEN $3 IS NULL
-              ELSE _cmp_types(o.oprright, $3) END
+              ELSE _cmp_types(o.oprright, _typename($3)) END
           AND _cmp_types(o.oprresult, $4)
    );
 $$ LANGUAGE SQL;
 
+-- _op_exists( left_type, name, right_type )
 CREATE OR REPLACE FUNCTION _op_exists ( NAME, NAME, NAME )
 RETURNS BOOLEAN AS $$
     SELECT EXISTS (
@@ -4286,9 +4287,9 @@ RETURNS BOOLEAN AS $$
         WHERE pg_catalog.pg_operator_is_visible(o.oid)
           AND o.oprname = $2
           AND CASE o.oprkind WHEN 'l' THEN $1 IS NULL
-              ELSE _cmp_types(o.oprleft, $1) END
+              ELSE _cmp_types(o.oprleft, _typename($1)) END
           AND CASE o.oprkind WHEN 'r' THEN $3 IS NULL
-              ELSE _cmp_types(o.oprright, $3) END
+              ELSE _cmp_types(o.oprright, _typename($3)) END
    );
 $$ LANGUAGE SQL;
 
@@ -5573,7 +5574,7 @@ RETURNS NAME AS $$
       JOIN pg_catalog.pg_language l ON f.langoid = l.oid
      WHERE f.schema = $1
        and f.name   = $2
-       AND f.args   = array_to_string($3, ',')
+       AND f.args   = _funkargs($3)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION _lang ( NAME, NAME )
@@ -5591,7 +5592,7 @@ RETURNS NAME AS $$
       FROM tap_funky f
       JOIN pg_catalog.pg_language l ON f.langoid = l.oid
      WHERE f.name = $1
-       AND f.args = array_to_string($2, ',')
+       AND f.args = _funkargs($2)
        AND f.is_visible;
 $$ LANGUAGE SQL;
 
@@ -5674,7 +5675,7 @@ RETURNS TEXT AS $$
       FROM tap_funky
      WHERE schema = $1
        AND name   = $2
-       AND args   = array_to_string($3, ',')
+       AND args   = _funkargs($3)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION _returns ( NAME, NAME )
@@ -5687,7 +5688,7 @@ RETURNS TEXT AS $$
     SELECT returns
       FROM tap_funky
      WHERE name = $1
-       AND args = array_to_string($2, ',')
+       AND args = _funkargs($2)
        AND is_visible;
 $$ LANGUAGE SQL;
 
@@ -5696,10 +5697,20 @@ RETURNS TEXT AS $$
     SELECT returns FROM tap_funky WHERE name = $1 AND is_visible;
 $$ LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION _retval(TEXT)
+RETURNS TEXT AS $$
+DECLARE
+    setof TEXT := substring($1 FROM '^setof[[:space:]]+');
+BEGIN
+    IF setof IS NULL THEN RETURN _typename($1); END IF;
+    RETURN setof || _typename(substring($1 FROM char_length(setof)+1));
+END;
+$$ LANGUAGE plpgsql;
+
 -- function_returns( schema, function, args[], type, description )
 CREATE OR REPLACE FUNCTION function_returns( NAME, NAME, NAME[], TEXT, TEXT )
 RETURNS TEXT AS $$
-    SELECT _func_compare($1, $2, $3, _returns($1, $2, $3), $4, $5 );
+    SELECT _func_compare($1, $2, $3, _returns($1, $2, $3), _retval($4), $5 );
 $$ LANGUAGE SQL;
 
 -- function_returns( schema, function, args[], type )
@@ -5715,7 +5726,7 @@ $$ LANGUAGE SQL;
 -- function_returns( schema, function, type, description )
 CREATE OR REPLACE FUNCTION function_returns( NAME, NAME, TEXT, TEXT )
 RETURNS TEXT AS $$
-    SELECT _func_compare($1, $2, _returns($1, $2), $3, $4 );
+    SELECT _func_compare($1, $2, _returns($1, $2), _retval($3), $4 );
 $$ LANGUAGE SQL;
 
 -- function_returns( schema, function, type )
@@ -5731,7 +5742,7 @@ $$ LANGUAGE SQL;
 -- function_returns( function, args[], type, description )
 CREATE OR REPLACE FUNCTION function_returns( NAME, NAME[], TEXT, TEXT )
 RETURNS TEXT AS $$
-    SELECT _func_compare(NULL, $1, $2, _returns($1, $2), $3, $4 );
+    SELECT _func_compare(NULL, $1, $2, _returns($1, $2), _retval($3), $4 );
 $$ LANGUAGE SQL;
 
 -- function_returns( function, args[], type )
@@ -5747,7 +5758,7 @@ $$ LANGUAGE SQL;
 -- function_returns( function, type, description )
 CREATE OR REPLACE FUNCTION function_returns( NAME, TEXT, TEXT )
 RETURNS TEXT AS $$
-    SELECT _func_compare(NULL, $1, _returns($1), $2, $3 );
+    SELECT _func_compare(NULL, $1, _returns($1), _retval($2), $3 );
 $$ LANGUAGE SQL;
 
 -- function_returns( function, type )
@@ -5765,7 +5776,7 @@ RETURNS BOOLEAN AS $$
       FROM tap_funky
      WHERE schema = $1
        AND name   = $2
-       AND args   = array_to_string($3, ',')
+       AND args   = _funkargs($3)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION _definer ( NAME, NAME )
@@ -5778,7 +5789,7 @@ RETURNS BOOLEAN AS $$
     SELECT is_definer
       FROM tap_funky
      WHERE name = $1
-       AND args = array_to_string($2, ',')
+       AND args = _funkargs($2)
        AND is_visible;
 $$ LANGUAGE SQL;
 
@@ -5916,7 +5927,7 @@ RETURNS BOOLEAN AS $$
       FROM tap_funky
      WHERE schema = $2
        AND name   = $3
-       AND args   = array_to_string($4, ',')
+       AND args   = _funkargs($4)
 $$ LANGUAGE SQL;
 
 -- _type_func(type, schema, function)
@@ -5931,7 +5942,7 @@ RETURNS BOOLEAN AS $$
     SELECT kind = $1
       FROM tap_funky
      WHERE name = $2
-       AND args = array_to_string($3, ',')
+       AND args = _funkargs($3)
        AND is_visible;
 $$ LANGUAGE SQL;
 
@@ -6071,7 +6082,7 @@ RETURNS BOOLEAN AS $$
       FROM tap_funky
      WHERE schema = $1
        AND name   = $2
-       AND args   = array_to_string($3, ',')
+       AND args   = _funkargs($3)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION _strict ( NAME, NAME )
@@ -6084,7 +6095,7 @@ RETURNS BOOLEAN AS $$
     SELECT is_strict
       FROM tap_funky
      WHERE name = $1
-       AND args = array_to_string($2, ',')
+       AND args = _funkargs($2)
        AND is_visible;
 $$ LANGUAGE SQL;
 
@@ -6231,7 +6242,7 @@ RETURNS TEXT AS $$
       FROM tap_funky f
      WHERE f.schema = $1
        and f.name   = $2
-       AND f.args   = array_to_string($3, ',')
+       AND f.args   = _funkargs($3)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION _vol ( NAME, NAME )
@@ -6245,7 +6256,7 @@ RETURNS TEXT AS $$
     SELECT _expand_vol(volatility)
       FROM tap_funky f
      WHERE f.name = $1
-       AND f.args = array_to_string($2, ',')
+       AND f.args = _funkargs($2)
        AND f.is_visible;
 $$ LANGUAGE SQL;
 
@@ -7606,11 +7617,11 @@ RETURNS TEXT AS $$
                AND n.nspname = $1
                AND t.typtype = ANY( COALESCE($4, ARRAY['b', 'c', 'd', 'p', 'e']) )
             EXCEPT
-            SELECT $2[i]
+            SELECT _typename($2[i])
               FROM generate_series(1, array_upper($2, 1)) s(i)
         ),
         ARRAY(
-            SELECT $2[i]
+            SELECT _typename($2[i])
                FROM generate_series(1, array_upper($2, 1)) s(i)
             EXCEPT
             SELECT t.typname
@@ -7658,11 +7669,11 @@ RETURNS TEXT AS $$
                AND pg_catalog.pg_type_is_visible(t.oid)
                AND t.typtype = ANY( COALESCE($3, ARRAY['b', 'c', 'd', 'p', 'e']) )
             EXCEPT
-            SELECT $1[i]
+            SELECT _typename($1[i])
               FROM generate_series(1, array_upper($1, 1)) s(i)
         ),
         ARRAY(
-            SELECT $1[i]
+            SELECT _typename($1[i])
                FROM generate_series(1, array_upper($1, 1)) s(i)
             EXCEPT
             SELECT t.typname
@@ -7680,7 +7691,6 @@ RETURNS TEXT AS $$
         $2
     );
 $$ LANGUAGE SQL;
-
 
 -- types_are( types[], description )
 CREATE OR REPLACE FUNCTION types_are ( NAME[], TEXT )
@@ -8075,7 +8085,6 @@ BEGIN
     RETURN ok(res, descr) || msg;
 END;
 $$ LANGUAGE plpgsql;
-
 
 -- casts_are( casts[], description )
 CREATE OR REPLACE FUNCTION casts_are ( TEXT[], TEXT )
@@ -8697,7 +8706,7 @@ RETURNS NAME AS $$
       FROM tap_funky
      WHERE schema = $1
        AND name   = $2
-       AND args   = array_to_string($3, ',')
+       AND args   = _funkargs($3)
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION _get_func_owner ( NAME, NAME[] )
@@ -8705,7 +8714,7 @@ RETURNS NAME AS $$
     SELECT owner
       FROM tap_funky
      WHERE name = $1
-       AND args = array_to_string($2, ',')
+       AND args = _funkargs($2)
        AND is_visible
 $$ LANGUAGE SQL;
 

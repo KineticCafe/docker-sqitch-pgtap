@@ -4,7 +4,7 @@ ARG PG_PROVE_VERSION
 ARG PGTAP_VERSION
 ARG SQITCH_VERSION
 
-ENV __DOCKERFILE_VERSION__=2.1.0
+ENV __DOCKERFILE_VERSION__=2.4.0
 
 RUN apk update \
     && apk add --no-cache --update \

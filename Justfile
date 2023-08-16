@@ -1,6 +1,6 @@
 pg_prove_version := `jq -r .pg_prove.version < package-versions.json`
 pgtap_version := `jq -r .pgtap.version < package-versions.json`
-pgtap_hashref := `jq -r .pgtap.hashref < package-versions.json`
+pgtap_hashref := `jq -r '.pgtap.hashref // empty' < package-versions.json`
 sqitch_version := `jq -r .sqitch.version < package-versions.json`
 image_version := `jq -r .VERSION < package-versions.json`
 
@@ -39,7 +39,7 @@ pgtap-set-version NEW_VERSION NEW_HASHREF="":
   declare new_hashref
   new_hashref="{{ NEW_HASHREF }}"
 
-  if [[ -n "${new_hashref}"]]; then
+  if [[ -n "${new_hashref}" ]]; then
     just _update_package_versions pgtap.hashref "${new_hashref}"
   fi
 
