@@ -35,10 +35,16 @@ cd /repo || {
 }
 
 eol() {
-  cat >&2 <<ERROR
+  cat >&2 <<EOL
 PostgreSQL $1 has reached end of life and support as of $2. Support is provided
 on a best-effort basis.
-ERROR
+EOL
+}
+
+beta() {
+  cat >&2 <<BETA
+PostgreSQL $1 is not yet released. Support is provided on a best-effort basis.
+BETA
 }
 
 version=$(psql_server_version | tr -d ' \t\n\v\r')

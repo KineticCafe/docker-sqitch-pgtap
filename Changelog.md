@@ -1,5 +1,19 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.5.0 / 2023-09-27
+
+- Upgraded pgTAP to 1.3.1.
+
+- Update support for the released version of PostgreSQL 16.
+
+- Changed maintenance procedures to:
+
+  - Add the version of Alpine to `package-versions.json` and use that for image
+    builds.
+  - Change maintenance procedure to automatically generate the
+    `build/pgtap/Dockerfile`. The latest versions required some updates because
+    of CLANG and LLVM version mismatches.
+
 ## 2.4.0 / 2023-08-16
 
 - Upgraded pgTAP to 1.3.0.

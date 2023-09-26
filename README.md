@@ -5,19 +5,19 @@ This is a simple Docker container that contains [sqitch][], [pgTAP][], and
 to work with `sqitch` and `pg_prove`/`pgTAP` without going through the effort of
 installing them on various systems.
 
-The image is based on Alpine (3.18) and does not include a PostgreSQL server;
+The image is based on Alpine 3.18 and does not include a PostgreSQL server;
 instead, it is expected that all values will be provided through environment
 variables or on the command-line.
 
 This version of the container includes:
 
-- pgTAP 1.3.0 (from [PGXN][])
-  - Support for PostgreSQL 9.6, 10, 11, 12, 13, 14, and 15
+- pgTAP 1.3.1 (from [PGXN][])
+  - Support for PostgreSQL 9.6, 10, 11, 12, 13, 14, 15, and 16
 - pg_prove 3.36
 - Sqitch 1.4.0
 
 The version of pgTAP is installed and uninstalled as needed; unit test files
-_must not_ include `CREATE EXTENSION pgtap`.
+_**must not**_ include `CREATE EXTENSION pgtap`.
 
 These images can be pulled either from Docker Hub
 (`kineticcafe/sqitch-pgtap:2.4`) or the GitHub Container Registry
@@ -32,10 +32,11 @@ using `$IMAGE`:
 
 ```console
 $ IMAGE=kineticcafe/sqitch-pgtap:latest ./run version
-[gchr.io/]kineticcafe/sqitch-pgtap:2.4.0
+[gchr.io/]kineticcafe/sqitch-pgtap:2.5.0
 
+  alpine 3.18
   sqitch (App::Sqitch) v1.4.0
-  pgtap 1.2.1 (96a7a416311ea5f2fa140f59cfdf7c7afbded17c)
+  pgtap 1.3.1
   pg_prove 3.36
 ```
 

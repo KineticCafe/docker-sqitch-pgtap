@@ -22,6 +22,11 @@ CREATE OR REPLACE FUNCTION pgtap_version()
 RETURNS NUMERIC AS 'SELECT 1.3;'
 LANGUAGE SQL IMMUTABLE;
 
+CREATE FUNCTION parse_type(type text, OUT typid oid, OUT typmod int4)
+RETURNS RECORD
+AS '$libdir/pgtap'
+LANGUAGE C STABLE STRICT;
+
 CREATE OR REPLACE FUNCTION plan( integer )
 RETURNS TEXT AS $$
 DECLARE
@@ -1461,19 +1466,12 @@ EXCEPTION WHEN undefined_object THEN RETURN $1;
 END;
 $$ LANGUAGE PLPGSQL STABLE;
 
-CREATE OR REPLACE FUNCTION _quote_ident_like(TEXT, TEXT)
+CREATE OR REPLACE FUNCTION format_type_string ( TEXT )
 RETURNS TEXT AS $$
-DECLARE
-    typname TEXT := _typename($1);
-    pcision TEXT := COALESCE(substring($1 FROM '[(][^")]+[)]$'), '');
-BEGIN
-    -- Just return it if rhs isn't quoted.
-    IF $2 !~ '"' THEN RETURN typname || pcision; END IF;
-
-    -- Otherwise return it with the type part quoted.
-    RETURN quote_ident(typname) || pcision;
+BEGIN RETURN format_type(p.typid, p.typmod) from parse_type($1) p;
+EXCEPTION WHEN OTHERS THEN RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE PLPGSQL STABLE;
 
 -- col_type_is( schema, table, column, schema, type, description )
 CREATE OR REPLACE FUNCTION col_type_is ( NAME, NAME, NAME, NAME, TEXT, TEXT )
@@ -1489,7 +1487,18 @@ BEGIN
         );
     END IF;
 
-    want_type := quote_ident($4) || '.' || _quote_ident_like($5, have_type);
+    IF quote_ident($4) = ANY(current_schemas(true)) THEN
+        want_type := quote_ident($4) || '.' || format_type_string($5);
+    ELSE
+        want_type := format_type_string(quote_ident($4) || '.' || $5);
+    END IF;
+
+    IF want_type IS NULL THEN
+        RETURN fail( $6 ) || E'\n' || diag (
+            '    Type ' || quote_ident($4) || '.' || $5 || ' does not exist'
+        );
+    END IF;
+
     IF have_type = want_type THEN
         -- We're good to go.
         RETURN ok( true, $6 );
@@ -1531,7 +1540,13 @@ BEGIN
         );
     END IF;
 
-    want_type := _quote_ident_like($4, have_type);
+    want_type := format_type_string($4);
+    IF want_type IS NULL THEN
+        RETURN fail( $5 ) || E'\n' || diag (
+            '    Type ' || $4 || ' does not exist'
+        );
+    END IF;
+
     IF have_type = want_type THEN
         -- We're good to go.
         RETURN ok( true, $5 );
@@ -1810,6 +1825,12 @@ $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION has_pk ( NAME, NAME, TEXT )
 RETURNS TEXT AS $$
     SELECT ok( _hasc( $1, $2, 'p' ), $3 );
+$$ LANGUAGE sql;
+
+-- has_pk( schema, table )
+CREATE OR REPLACE FUNCTION has_pk ( NAME, NAME )
+RETURNS TEXT AS $$
+    SELECT has_pk( $1, $2, 'Table ' || quote_ident($1) || '.' || quote_ident($2) || ' should have a primary key' );
 $$ LANGUAGE sql;
 
 -- has_pk( table, description )
@@ -4059,12 +4080,8 @@ $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION _cmp_types(oid, name)
 RETURNS BOOLEAN AS $$
-DECLARE
-    dtype TEXT := pg_catalog.format_type($1, NULL);
-BEGIN
-    RETURN dtype = _quote_ident_like($2, dtype);
-END;
-$$ LANGUAGE plpgsql;
+    SELECT pg_catalog.format_type($1, NULL) = _typename($2);
+$$ LANGUAGE sql;
 
 CREATE OR REPLACE FUNCTION _cast_exists ( NAME, NAME, NAME, NAME )
 RETURNS BOOLEAN AS $$
@@ -7814,7 +7831,10 @@ BEGIN
         );
     END IF;
 
-    RETURN is( actual_type, quote_ident($3) || '.' || _quote_ident_like($4, actual_type), $5 );
+    IF quote_ident($3) = ANY(current_schemas(true)) THEN
+        RETURN is( actual_type, quote_ident($3) || '.' || _typename($4), $5);
+    END IF;
+    RETURN is( actual_type, _typename(quote_ident($3) || '.' || $4), $5);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -7841,7 +7861,7 @@ BEGIN
         );
     END IF;
 
-    RETURN is( actual_type, _quote_ident_like($3, actual_type), $4 );
+    RETURN is( actual_type, _typename($3), $4 );
 END;
 $$ LANGUAGE plpgsql;
 
@@ -7867,7 +7887,7 @@ BEGIN
         );
     END IF;
 
-    RETURN is( actual_type, _quote_ident_like($2, actual_type), $3 );
+    RETURN is( actual_type, _typename($2), $3 );
 END;
 $$ LANGUAGE plpgsql;
 
@@ -7893,7 +7913,10 @@ BEGIN
         );
     END IF;
 
-    RETURN isnt( actual_type, quote_ident($3) || '.' || _quote_ident_like($4, actual_type), $5 );
+    IF quote_ident($3) = ANY(current_schemas(true)) THEN
+        RETURN isnt( actual_type, quote_ident($3) || '.' || _typename($4), $5);
+    END IF;
+    RETURN isnt( actual_type, _typename(quote_ident($3) || '.' || $4), $5);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -7920,7 +7943,7 @@ BEGIN
         );
     END IF;
 
-    RETURN isnt( actual_type, _quote_ident_like($3, actual_type), $4 );
+    RETURN isnt( actual_type, _typename($3), $4 );
 END;
 $$ LANGUAGE plpgsql;
 
@@ -7946,7 +7969,7 @@ BEGIN
         );
     END IF;
 
-    RETURN isnt( actual_type, _quote_ident_like($2, actual_type), $3 );
+    RETURN isnt( actual_type, _typename($2), $3 );
 END;
 $$ LANGUAGE plpgsql;
 
