@@ -76,9 +76,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            PG_PROVE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pg_prove.version }}
+            ALPINE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).alpine.version }}
             PGTAP_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pgtap.version }}
+            PG_PROVE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pg_prove.version }}
             SQITCH_VERSION=${{ fromJSON(steps.package-versions.outputs.data).sqitch.version }}
+            __DOCKERFILE_VERSION__=${{ fromJSON(steps.package-versions.outputs.data).version }}
           platforms: |
             linux/amd64
             linux/arm64

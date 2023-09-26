@@ -1,8 +1,9 @@
 #! /bin/bash
 
-declare pgtap_version pgtap_hashref
+declare alpine_version pgtap_version pgtap_hashref
 pgtap_version="$(jq -r .pgtap.version /home/sqitch/package-versions.json)"
 pgtap_hashref="$(jq -r .pgtap.hashref /home/sqitch/package-versions.json)"
+alpine_version="$(jq -r .alpine.version /home/sqitch/package-versions.json)"
 
 if [[ -n "${pgtap_hashref}" ]] && [[ "${pgtap_hashref}" != null ]]; then
   pgtap_version="${pgtap_version} (${pgtap_hashref})"
@@ -11,6 +12,7 @@ fi
 cat <<EOS
 [gchr.io/]kineticcafe/sqitch-pgtap:$(cat /home/sqitch/VERSION)
 
+  alpine  ${alpine_version}
   $(sqitch --version)
   pgtap ${pgtap_version}
   $(pg_prove --version)

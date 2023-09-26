@@ -28,9 +28,11 @@ jobs:
           load: true
           tags: kineticcafe/sqitch-pgtap:test
           build-args: |
-            PG_PROVE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pg_prove.version }}
+            ALPINE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).alpine.version }}
             PGTAP_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pgtap.version }}
+            PG_PROVE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pg_prove.version }}
             SQITCH_VERSION=${{ fromJSON(steps.package-versions.outputs.data).sqitch.version }}
+            __DOCKERFILE_VERSION__=${{ fromJSON(steps.package-versions.outputs.data).version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

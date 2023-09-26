@@ -4,7 +4,7 @@ Maintenance of kineticcafe/sqitch-pgtap is fairly easy but has some points worth
 documenting.
 
 On every release, remember to update the `opt/pgtap` cache files with `just
-get-pgtap`.
+update-pgtap`.
 
 ## Updating Package Versions
 
@@ -16,6 +16,7 @@ It is recommended that you use `just PACKAGE-set-version` to set new versions,
 as this will maintain the required condensed format:
 
 ```sh
+just alpine-set-version 3.18
 just sqitch-set-version 1.4.0
 just pgtap-set-version 1.2.1
 just pgtap-set-version 1.2.1 96a7a416311ea5f2fa140f59cfdf7c7afbded17c
@@ -54,7 +55,7 @@ just pgtap-set-hashref 96a7a416311ea5f2fa140f59cfdf7c7afbded17c
 
 The scripts and functions used by pgTAP vary by PostgreSQL version, so the
 updated versions must be cached as `pgtap.tar`, which is committed to this repo.
-This cache file can be updated with `just get-pgtap` (this requires
+This cache file can be updated with `just update-pgtap` (this requires
 [casey/just][]).
 
 ### Update `sqitch`
@@ -72,50 +73,35 @@ PostgreSQL versions require updating in multiple places:
 
 - `scripts/do_pgtap`: update the `version` case statement (lines 36–54) to add
   or remove a version pattern match.
-- `build/pgtap/Dockerfile`:
+- `build/pgtap/versions.json`:
 
-  - Add or remove a `FROM` block for the appropriate version of PostgreSQL.
-    These blocks are added in reverse order of version and we only specify
-    _major_ PostgreSQL versions.
+  - If the base version of Alpine is being changed, update `defaults.alpine`.
+    This is done automatically by `just alpine-set-version`
 
-    ```dockerfile
-    FROM postgres:<VERSION>-alpine3.<ALPINE_VERSION> AS build-pgtap-psql-<VERSION>
+  - Add or remove a block in the `postgres` array. The only required parameter
+    is `name`, which should be the short version name.
 
-    ARG PGTAP_VERSION
+    - If an alternative (older) version of Alpine is required, set the parameter
+      `alpine` to the required version.
 
-    COPY pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
+    - When adding a beta version, add a `version` key with the required version.
+      For 17beta1, the block would look like:
 
-    RUN apk add --no-cache --update perl wget postgresql-dev openssl \
-          build-base make perl-dev bash \
-        && mkdir -p /opt/pgtap/<VERSION> \
-        && cd /opt/pgtap-$PGTAP_VERSION \
-        && make && make install \
-        && mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/<VERSION> \
-        && rm -rf /var/cache/apk/* /tmp/*
-    ```
+      ```json
+      { "name": "17", "version": "17beta1" }
+      ```
 
-    If adding support for a non-production version (such as `16beta2`), then the
-    `FROM` line should look like this:
-
-    ```dockerfile
-    FROM postgres:16beta2-alpine3.18 AS build-pgtap-psql-16
-    ```
-
-    That is, the image name and pgtap folder name must be the major version
-    number with no qualifiers.
-
-  - Add a `COPY` line to the `package-pgtap` section:
-
-    ```dockerfile
-    COPY --from=build-pgtap-psql-<VERSION> /opt/pgtap/<VERSION> /opt/pgtap/<VERSION>
-    ```
+The `build/pgtap/Dockerfile` will be updated automatically based on
+`build/pgtap/versions.json`.
 
 ## Updating Docker Base Images
 
-Docker base images must be kept up to date. These should be updated based on the
-latest available Alpine version for each version of PostgreSQL used in
-`build/pgtap/Dockerfile`, and the final release should be the latest available
-Alpine version.
+Docker base images must be kept up to date, and this is managed through
+`package-versions.json`.
+
+```sh
+just alpine-set-version 3.18
+```
 
 [pgxn]: https://pgxn.org/dist/pgtap
 [casey/just]: https://github.com/casey/just
