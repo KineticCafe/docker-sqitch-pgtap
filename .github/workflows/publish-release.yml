@@ -47,7 +47,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: meta
-        uses: docker/metadata-action@v5.0.0
+        uses: docker/metadata-action@v5.2.0
         with:
           images: |
             kineticcafe/sqitch-pgtap
@@ -69,7 +69,7 @@ jobs:
         run: echo "data=$(cat package-versions.json)" >> $GITHUB_OUTPUT
 
       - id: docker_build
-        uses: docker/build-push-action@v5.0.0
+        uses: docker/build-push-action@v5.1.0
         with:
           context: .
           push: true
