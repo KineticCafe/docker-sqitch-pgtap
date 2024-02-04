@@ -1,0 +1,144 @@
+#! /usr/bin/env bash
+
+readonly url=https://raw.githubusercontent.com/KineticCafe/docker-sqitch-pgtap/main/kineticcafe-sqitch-pgtap
+declare script
+script="$(basename "${url}")"
+readonly script
+
+declare -a symlinked_commands
+symlinked_commands=(
+  sqitch sqitcher pg_prove
+)
+readonly symlinked_commands
+
+# cross-platform equivalent to GNU readlink -f.
+canonicalize() {
+  local t
+  t="$1"
+
+  cd "$(dirname "${t}")" || return 1
+  t="$(basename "${t}")"
+
+  while [[ -L "${t}" ]]; do
+    t="$(readlink "${t}")"
+    cd "$(dirname "${t}")" || return 1
+    t="$(basename "${t}")"
+  done
+
+  echo "$(pwd -P)/${t}"
+}
+
+usage() {
+  cat <<USAGE
+usage: $(basename "$0") [--no-symlinks|-S] [--force|-f] [--verbose|-v] TARGET
+       $(basename "$0") --help | -h | -?
+
+Installs the ${script} script to TARGET. Installation will be skipped
+if the TARGET/${script} already exists and --force is not supplied.
+
+Unless --no-symlinks is provided, it will also attempt to install symlinks for
+the following commands:
+
+  sqitch                    sqitcher                 pg_prove
+
+Symlink installation will be skipped if the file already exists and is not
+already a symlink to TARGET/${script} and --force is not supplied.
+USAGE
+}
+
+declare force install_symlinks no_download target target_script verbose
+force=false
+install_symlinks=true
+no_download=false
+verbose=false
+
+while (($#)); do
+  case "$1" in
+  --force | -f) force=true ;;
+  --verbose | -v) verbose=true ;;
+  --no-download) no_download=true ;;
+  --no-symlinks | -S) install_symlinks=false ;;
+  --help | -h | -?)
+    usage
+    exit 0
+    ;;
+  *)
+    if [[ ! -d "$1" ]]; then
+      printf >&2 "error: '%s' is not a directory\n\n" "$1"
+      usage >&2
+      exit 1
+    fi
+
+    if [[ -n "${target}" ]]; then
+      printf >&2 "warning: target '%s' is being replaced with '%s'" \
+        "$target" "$1"
+    fi
+
+    target="$1"
+    ;;
+  esac
+
+  shift
+done
+
+if [[ -z "${target}" ]]; then
+  printf >&2 "error: no TARGET provided\n\n"
+  usage >&2
+  exit 1
+fi
+
+target_script="${target}/${script}"
+
+download-script() {
+  local -a cmd
+  cmd=(curl -sSL --fail "${url}" -o "${target_script}")
+
+  [[ "${verbose}" ]] && echo "${cmd[*]}"
+
+  if ! "${cmd[@]}"; then
+    echo >&2 "error: could not download ${url} into ${target_script}."
+    exit 1
+  fi
+}
+
+if "${no_download}" && ! [[ -x "${target_script}" ]]; then
+  echo >&2 "error: ${target_script} does not exist and no download is set."
+  exit 1
+elif [[ -x "${target_script}" ]] && ! "${force}"; then
+  echo >&2 "error: ${target_script} already exists."
+  exit 1
+fi
+
+if ! [[ -x "${target_script}" ]] && ! "${no_download}"; then
+  download-script
+
+  if ! [[ -x "${target_script}" ]]; then
+    if "${verbose}"; then
+      chmod -v +x "${target_script}"
+    else
+      chmod +x "${target_script}"
+    fi
+  fi
+fi
+
+"${install_symlinks}" || exit 0
+
+declare symlinked_command target_command canonical_target
+
+for symlinked_command in "${symlinked_commands[@]}"; do
+  target_command="${target}/${symlinked_command}"
+
+  if [[ -f "${target_command}" ]]; then
+    canonical_target="$(canonicalize "${target_command}")"
+
+    if [[ "${canonical_target}" != "${target_script}" ]]; then
+      "${force}" || continue
+    fi
+  fi
+
+  if "${verbose}"; then
+    ln -sfv "${target_script}" "${target_command}"
+  else
+    ln -sf "${target_script}" "${target_command}"
+  fi
+done

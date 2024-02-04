@@ -36,6 +36,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - run: ./run version
+      - run: ./kineticcafe-sqitch-pgtap version
         env:
           IMAGE: kineticcafe/sqitch-pgtap:test
