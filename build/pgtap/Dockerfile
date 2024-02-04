@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM postgres:16-alpine3.18 AS build-pgtap-psql-16
+FROM postgres:16-alpine3.19 AS build-pgtap-psql-16
 
 ARG PGTAP_VERSION
 
@@ -46,7 +46,7 @@ mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/16
 BUILD
 
 
-FROM postgres:15-alpine3.18 AS build-pgtap-psql-15
+FROM postgres:15-alpine3.19 AS build-pgtap-psql-15
 
 ARG PGTAP_VERSION
 
@@ -92,7 +92,7 @@ mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/15
 BUILD
 
 
-FROM postgres:14-alpine3.18 AS build-pgtap-psql-14
+FROM postgres:14-alpine3.19 AS build-pgtap-psql-14
 
 ARG PGTAP_VERSION
 
@@ -138,7 +138,7 @@ mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/14
 BUILD
 
 
-FROM postgres:13-alpine3.18 AS build-pgtap-psql-13
+FROM postgres:13-alpine3.19 AS build-pgtap-psql-13
 
 ARG PGTAP_VERSION
 
@@ -184,7 +184,7 @@ mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/13
 BUILD
 
 
-FROM postgres:12-alpine3.18 AS build-pgtap-psql-12
+FROM postgres:12-alpine3.19 AS build-pgtap-psql-12
 
 ARG PGTAP_VERSION
 
@@ -230,7 +230,7 @@ mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/12
 BUILD
 
 
-FROM postgres:11-alpine3.18 AS build-pgtap-psql-11
+FROM postgres:11-alpine3.19 AS build-pgtap-psql-11
 
 ARG PGTAP_VERSION
 
@@ -368,7 +368,7 @@ mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/9.6
 BUILD
 
 
-FROM alpine:3.18 AS package-pgtap
+FROM alpine:3.19 AS package-pgtap
 
 RUN mkdir -p /opt/pgtap
 

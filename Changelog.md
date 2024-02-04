@@ -1,5 +1,16 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.6.0 / 2024-02-27
+
+- Upgrade Sqitch to version [1.4.1][sqitch-1.4.1].
+
+- Upgrade Alpine to version [3.19][alpine-3.19].
+
+- Rename `run` to `kineticcafe-sqitch-pgtap`.
+
+- Added an `install` script to install `kineticcafe-sqitch-pgtap` and optional
+  symlinks.
+
 ## 2.5.1 / 2024-02-20
 
 - Upgrade pgTAP to 1.3.3 at
@@ -9,7 +20,7 @@
 
 ## 2.5.0 / 2023-09-27
 
-- Upgraded pgTAP to 1.3.1.
+- Upgraded pgTAP to [1.3.1][pgtap-1.3.1].
 
 - Update support for the released version of PostgreSQL 16.
 
@@ -23,13 +34,13 @@
 
 ## 2.4.0 / 2023-08-16
 
-- Upgraded pgTAP to 1.3.0.
+- Upgraded pgTAP to [1.3.0][pgtap-1.3.0].
 
 - Updated PostgreSQL 16 beta 2 to PostgreSQL beta 3
 
 ## 2.3.0 / 2023-08-03
 
-- Upgraded sqitch version to 1.4.0.
+- Upgraded Sqitch version to [1.4.0][sqitch-1.4.0].
 
 - Upgraded pgTAP to 1.2.1 at theory/pgtap@96a7a416311ea5f2fa140f59cfdf7c7afbded17c.
 
@@ -46,7 +57,7 @@
 - Extended Dependabot configuration to look at `build/pgtap/Dockerfile` as well
   as the root `Dockerfile.`
 
-- Upgraded base image to Alpine 3.18.
+- Upgraded base image to Alpine [3.18][alpine-3.18]
 
 - Added code to work around an unnecessary warning from `docker context ls` when
   `$DOCKER_HOST` is already set.
@@ -93,26 +104,26 @@
 
 - Update support for the released version of PostgreSQL 15.
 
-- Update base Alpine version to 3.17.
+- Update base Alpine version to [3.17][alpine-3.17]
 
-- Add GHCR publishing.
+- Add GitHub Container Repository publishing.
 
 ## 2.0.1 / 2022-10-04
 
-- Update sqitch version to 1.3.1.
+- Update Sqitch version to [1.3.1][sqitch-1.3.1]
 
 - Update PostgreSQL 15 to RC 1 from beta 3.
 
 ## 2.0.0 / 2022-08-23
 
-- Update base alpine version to 3.16. Made the use of alpine 3.16 explicit in
-  the specification of the PostgreSQL versions in the docker file.
+- Update base alpine version to [3.16][alpine-3.16] Made the use of alpine 3.16
+  explicit in the specification of the PostgreSQL versions in the docker file.
 
 - Update tool versions:
 
   - pgTAP 1.2.1+ (from git)
-  - pg_prove 3.36 (`TAP::Parser::SourceHandler::pgTAP`)
-  - sqitch 1.3.0 (`App::Sqitch`)
+  - pg_prove [3.36][pg_prove-3.36] (`TAP::Parser::SourceHandler::pgTAP`)
+  - Sqitch [1.3.0][sqitch-1.3.0] (`App::Sqitch`)
 
 - Added PostgreSQL 15 beta 3.
 
@@ -142,13 +153,13 @@
 
 ## 1.1.0 / 2021-12-14
 
-- Update base alpine version to 3.15
+- Update base alpine version to [3.15][alpine-3.15]
 
 - Update tool versions:
 
-  - pgTAP 1.2.0
-  - pg_prove 3.35 (`TAP::Parser::SourceHandler::pgTAP`)
-  - sqitch 1.2.1 (`App::Sqitch`)
+  - pgTAP [1.2.0][pgtap-1.2.0]
+  - pg_prove [3.35][pg_prove-3.35] (`TAP::Parser::SourceHandler::pgTAP`)
+  - Sqitch [1.2.1][sqitch-1.2.1] (`App::Sqitch`)
 
 - Added PostgreSQL 14. Please note that PostgreSQL 9.6 has reached end-of-life,
   and will be removed in a future version.
@@ -161,6 +172,21 @@
 
 - Initial released version.
 
-[extractions/setup-just]: https://github.com/extractions/setup-just
+[alpine-3.15]: https://hub.docker.com/_/alpine/tags?name=3.15
+[alpine-3.16]: https://hub.docker.com/_/alpine/tags?name=3.16
+[alpine-3.17]: https://hub.docker.com/_/alpine/tags?name=3.17
+[alpine-3.18]: https://hub.docker.com/_/alpine/tags?name=3.18
+[alpine-3.19]: https://hub.docker.com/_/alpine/tags?name=3.19
 [casey/just]: https://github.com/casey/just
+[extractions/setup-just]: https://github.com/extractions/setup-just
 [orbstack-internal]: https://docs.orbstack.dev/machines/network#connecting-to-servers-on-mac
+[pg_prove-3.35]: https://github.com/theory/tap-parser-sourcehandler-pgtap/releases/tag/v3.35
+[pg_prove-3.36]: https://github.com/theory/tap-parser-sourcehandler-pgtap/releases/tag/v3.36
+[pgtap-1.2.0]: https://github.com/theory/pgtap/releases/tag/v1.2.0
+[pgtap-1.3.0]: https://github.com/theory/pgtap/releases/tag/v1.3.0
+[pgtap-1.3.1]: https://github.com/theory/pgtap/releases/tag/v1.3.1
+[sqitch-1.2.1]: https://github.com/sqitchers/sqitch/releases/tag/v1.2.1
+[sqitch-1.3.0]: https://github.com/sqitchers/sqitch/releases/tag/v1.3.0
+[sqitch-1.3.1]: https://github.com/sqitchers/sqitch/releases/tag/v1.3.1
+[sqitch-1.4.0]: https://github.com/sqitchers/sqitch/releases/tag/v1.4.0
+[sqitch-1.4.1]: https://github.com/sqitchers/sqitch/releases/tag/v1.4.1

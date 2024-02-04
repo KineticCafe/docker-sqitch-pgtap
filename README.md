@@ -5,7 +5,7 @@ This is a simple Docker container that contains [sqitch][], [pgTAP][], and
 to work with `sqitch` and `pg_prove`/`pgTAP` without going through the effort of
 installing them on various systems.
 
-The image is based on Alpine 3.18 and does not include a PostgreSQL server;
+The image is based on Alpine 3.19 and does not include a PostgreSQL server;
 instead, it is expected that all values will be provided through environment
 variables or on the command-line.
 
@@ -16,39 +16,68 @@ This version of the container includes:
 - pgTAP 1.3.3 (from theory/pgtap@02bc769c92c48d01e4c2f76db6523287017b45a9)
   - Support for PostgreSQL 9.6, 10, 11, 12, 13, 14, 15, and 16
 - pg_prove 3.36
-- Sqitch 1.4.0
+- Sqitch 1.4.1
 
 The version of pgTAP is installed and uninstalled as needed; unit test files
 _**must not**_ include `CREATE EXTENSION pgtap`.
 
 These images can be pulled either from Docker Hub
-(`kineticcafe/sqitch-pgtap:2.4`) or the GitHub Container Registry
-(`ghcr.io/kineticcafe/sqitch-pgtap:2.4`).
+(`kineticcafe/sqitch-pgtap:2.5`) or the GitHub Container Registry
+(`ghcr.io/kineticcafe/sqitch-pgtap:2.5`).
 
-## `run` script Commands
+## `kineticcafe-sqitch-pgtap` script Commands
 
-The `run` script is recommended for running everything as it manages environment
-variable configuration for each run. The `run` script will pull from
-`ghcr.io/kineticcafe/sqitch-pgtap:2` by default; this can be overridden by
-using `$IMAGE`:
+The `kineticcafe-sqitch-pgtap` script is recommended for running everything as
+it manages environment variable configuration for each run. The
+`kineticcafe-sqitch-pgtap` script will pull from
+`ghcr.io/kineticcafe/sqitch-pgtap:2` by default; this can be overridden by using
+`$IMAGE`:
 
 ```console
 $ IMAGE=kineticcafe/sqitch-pgtap:latest ./run version
 [gchr.io/]kineticcafe/sqitch-pgtap:2.5.0
 
-  alpine 3.18
-  sqitch (App::Sqitch) v1.4.0
+  alpine 3.19
+  sqitch (App::Sqitch) v1.4.1
   pgtap 1.3.1
   pg_prove 3.36
 ```
 
+### Installing `kineticcafe-sqitch-pgtap`
+
+`kineticcafe-sqitch-pgtap` can be installed with symlinks using the `install`
+script:
+
+```sh
+curl -sSL --fail \
+  https://raw.githubusercontent.com/KineticCafe/docker-sqitch-pgtap/main/install |
+  bash -s -- ~/.local/bin
+```
+
+Replace `~/.local/bin` with your preferred binary directory.
+
+By default, it will download `kineticcafe-sqitch-pgtap` from GitHub and install
+it in the provided `TARGET` and make symbolic links for the following commands:
+`sqitch`, `sqitcher`, and `pgtap`. Symbolic link creation will not overwrite
+files or symbolic links to locations _other_ than `TARGET/kinetic-sqitch-pgtap`.
+
+`sqitcher` is just short name for `kineticcafe-sqitch-pgtap`.
+
+`--no-symlinks` (`-S`) may be specified to skip symbolic link creation entirely.
+
+`--force` (`-f`) may be specified to install `kineticcafe-sqitch-pgtap` even if
+it already exists, and to overwrite files and
+non-`TARGET/kineticcafe-sqitch-pgtap` symbolic links.
+
+`--verbose` (`-v`) will turn on trace output of commands.
+
 ### Core commands
 
-- `sqitch`: Runs sqitch
-- `pg_prove`: Runs pg_prove directly
+- `sqitch`: Runs Sqitch
+- `pg_prove`: Runs `pg_prove` directly
 - `pgtap install`: Installs pgTAP in the current database
 - `pgtap uninstall`: Uninstalls pgTAP from the current database
-- `pgtap test`: Installs pgTAP, runs pg_prove, and then uninstalls pgTAP
+- `pgtap test`: Installs pgTAP, runs `pg_prove`, and then uninstalls pgTAP
 - `version`: Prints the versions of the applications
 
 ### PostgreSQL commands
@@ -86,10 +115,7 @@ $ IMAGE=kineticcafe/sqitch-pgtap:latest ./run version
 - `pgtap-tests`: Runs `pgtap test test/*.sql` for the default database
 
 [`pg_prove`]: https://pgtap.org/pg_prove.html
-[disaykin/pgtap-docker-image]: https://github.com/disaykin/pgtap-docker-image
-[docker-sqitch]: https://github.com/sqitchers/docker-sqitch
-[lren-chuv/docker-pgtap]: https://github.com/LREN-CHUV/docker-pgtap
 [pgtap]: https://pgtap.org
+[pgxn]: https://pgxn.org/dist/pgtap/
 [sqitch]: https://sqitch.org
 [theory/tap-parser-sourcehandler-pgtap]: https://github.com/theory/tap-parser-sourcehandler-pgtap
-[pgxn]: https://pgxn.org/dist/pgtap/

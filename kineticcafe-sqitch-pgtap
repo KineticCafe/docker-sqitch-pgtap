@@ -557,7 +557,9 @@ while (($#)); do
   shift
 done
 
-[[ -t 0 ]] || interactive=()
+if ! [[ -t 0 ]] || ! [[ -t 1 ]]; then
+  interactive=()
+fi
 
 if has-function "run-${cmd}"; then
   setup
