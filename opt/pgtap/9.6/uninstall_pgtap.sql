@@ -1064,7 +1064,6 @@ DROP FUNCTION IF EXISTS _get_latest ( text );
 DROP FUNCTION IF EXISTS _get ( text );
 DROP FUNCTION IF EXISTS no_plan();
 DROP FUNCTION IF EXISTS plan( integer );
-DROP FUNCTION IF EXISTS parse_type(type text, OUT typid oid, OUT typmod int4);
 DROP FUNCTION IF EXISTS pgtap_version();
 DROP FUNCTION IF EXISTS os_name();
 DROP FUNCTION IF EXISTS pg_version_num();
