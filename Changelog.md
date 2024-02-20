@@ -1,5 +1,12 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.5.1 / 2024-02-20
+
+- Upgrade pgTAP to 1.3.3 at
+  theory/pgtap@02bc769c92c48d01e4c2f76db6523287017b45a9. This fixes a bug
+  introduced where the column type validation is reporting invalid values.
+  Incorporates the fix theory/pgtap#332.
+
 ## 2.5.0 / 2023-09-27
 
 - Upgraded pgTAP to 1.3.1.

@@ -9,9 +9,11 @@ The image is based on Alpine 3.18 and does not include a PostgreSQL server;
 instead, it is expected that all values will be provided through environment
 variables or on the command-line.
 
+Unless otherwise noted, pgTAP will be installed from [PGXN][].
+
 This version of the container includes:
 
-- pgTAP 1.3.1 (from [PGXN][])
+- pgTAP 1.3.3 (from theory/pgtap@02bc769c92c48d01e4c2f76db6523287017b45a9)
   - Support for PostgreSQL 9.6, 10, 11, 12, 13, 14, 15, and 16
 - pg_prove 3.36
 - Sqitch 1.4.0
