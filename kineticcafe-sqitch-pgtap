@@ -542,8 +542,13 @@ run-help() {
   fi
 }
 
-cmd="$1"
-shift
+case "${bn0}" in
+sqitch | pg_prove) cmd="${bn0}" ;;
+*)
+  cmd="$1"
+  shift
+  ;;
+esac
 
 declare -a args interactive
 interactive=(-it)
