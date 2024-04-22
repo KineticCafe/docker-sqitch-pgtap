@@ -75,7 +75,8 @@ jobs:
             PGTAP_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pgtap.version }}
             PG_PROVE_VERSION=${{ fromJSON(steps.package-versions.outputs.data).pg_prove.version }}
             SQITCH_VERSION=${{ fromJSON(steps.package-versions.outputs.data).sqitch.version }}
-            __DOCKERFILE_VERSION__=${{ fromJSON(steps.package-versions.outputs.data).version }}
+            __DOCKERFILE_VERSION__=${{ fromJSON(steps.package-versions.outputs.data).VERSION }}
+            __DOCKERFILE_DATE__=${{ fromJSON(steps.package-versions.outputs.data).DATE }}
           platforms: |
             linux/amd64
             linux/arm64

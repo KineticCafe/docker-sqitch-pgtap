@@ -16,4 +16,6 @@ cat <<EOS
   $(sqitch --version)
   pgtap ${pgtap_version}
   $(pg_prove --version)
+
+Last updated $(cat /home/sqitch/DATE)
 EOS

@@ -8,6 +8,7 @@ ARG PG_PROVE_VERSION
 ARG PGTAP_VERSION
 ARG SQITCH_VERSION
 ARG __DOCKERFILE_VERSION__
+ARG __DOCKERFILE_DATE__
 
 RUN <<SETUP
 set -eux
@@ -59,6 +60,7 @@ adduser --disabled-password sqitch
 mkdir -p /opt /home/sqitch/bin
 
 echo $__DOCKERFILE_VERSION__ > /home/sqitch/VERSION
+echo $__DOCKERFILE_DATE__ > /home/sqitch/DATE
 
 chmod +x /home/sqitch/bin/*
 chown -R sqitch:sqitch /home
