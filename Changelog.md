@@ -1,5 +1,20 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.7.0 / 2024-04-24
+
+- Upgrade pgTAP to released version [1.3.3][pgtap-1.3.3].
+
+- Marked PostgreSQL 11 support as best effort since it is already at end of
+  life.
+
+- Fix `kineticcafe-sqitch-pgtap` to work properly with the `sqitch` and
+  `pg_prove` symlinks created by `install`.
+
+- Restructure the `Justfile` used for version maintenance and added an
+  additional output for version, `Last updated`.
+
+- Updated the maintenance documentation.
+
 ## 2.6.0 / 2024-02-27
 
 - Upgrade Sqitch to version [1.4.1][sqitch-1.4.1].
@@ -185,6 +200,7 @@
 [pgtap-1.2.0]: https://github.com/theory/pgtap/releases/tag/v1.2.0
 [pgtap-1.3.0]: https://github.com/theory/pgtap/releases/tag/v1.3.0
 [pgtap-1.3.1]: https://github.com/theory/pgtap/releases/tag/v1.3.1
+[pgtap-1.3.3]: https://github.com/theory/pgtap/releases/tag/v1.3.3
 [sqitch-1.2.1]: https://github.com/sqitchers/sqitch/releases/tag/v1.2.1
 [sqitch-1.3.0]: https://github.com/sqitchers/sqitch/releases/tag/v1.3.0
 [sqitch-1.3.1]: https://github.com/sqitchers/sqitch/releases/tag/v1.3.1
