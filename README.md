@@ -14,7 +14,8 @@ Unless otherwise noted, pgTAP will be installed from [PGXN][].
 This version of the container includes:
 
 - pgTAP 1.3.3 (from theory/pgtap@02bc769c92c48d01e4c2f76db6523287017b45a9)
-  - Support for PostgreSQL 9.6, 10, 11, 12, 13, 14, 15, and 16
+  - Full support for PostgreSQL 12, 13, 14, 15, and 16
+  - Best effort support for end of life PostgreSQL versions 9.6, 10, and 11
 - pg_prove 3.36
 - Sqitch 1.4.1
 
@@ -22,8 +23,8 @@ The version of pgTAP is installed and uninstalled as needed; unit test files
 _**must not**_ include `CREATE EXTENSION pgtap`.
 
 These images can be pulled either from Docker Hub
-(`kineticcafe/sqitch-pgtap:2.5`) or the GitHub Container Registry
-(`ghcr.io/kineticcafe/sqitch-pgtap:2.5`).
+(`kineticcafe/sqitch-pgtap:2.7`) or the GitHub Container Registry
+(`ghcr.io/kineticcafe/sqitch-pgtap:2.7`).
 
 ## `kineticcafe-sqitch-pgtap` script Commands
 
@@ -35,12 +36,14 @@ it manages environment variable configuration for each run. The
 
 ```console
 $ IMAGE=kineticcafe/sqitch-pgtap:latest ./run version
-[gchr.io/]kineticcafe/sqitch-pgtap:2.5.0
+[gchr.io/]kineticcafe/sqitch-pgtap:2.7.0
 
   alpine 3.19
   sqitch (App::Sqitch) v1.4.1
-  pgtap 1.3.1
+  pgtap 1.3.3
   pg_prove 3.36
+
+Last updated 2024-04-22
 ```
 
 ### Installing `kineticcafe-sqitch-pgtap`
@@ -61,7 +64,7 @@ it in the provided `TARGET` and make symbolic links for the following commands:
 `sqitch`, `sqitcher`, and `pgtap`. Symbolic link creation will not overwrite
 files or symbolic links to locations _other_ than `TARGET/kinetic-sqitch-pgtap`.
 
-`sqitcher` is just short name for `kineticcafe-sqitch-pgtap`.
+`sqitcher` is a shorter name for `kineticcafe-sqitch-pgtap`.
 
 `--no-symlinks` (`-S`) may be specified to skip symbolic link creation entirely.
 
