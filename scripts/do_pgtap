@@ -58,7 +58,10 @@ case "${version}" in
   eol 10 2022-11-10
   version=10
   ;;
-11*) version=11 ;;
+11*)
+  eol 11 2023-11-06
+  version=11
+  ;;
 12*) version=12 ;;
 13*) version=13 ;;
 14*) version=14 ;;
