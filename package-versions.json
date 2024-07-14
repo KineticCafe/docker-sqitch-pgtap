@@ -1,1 +1,1 @@
-{"alpine":{"version":"3.19"},"pg_prove":{"version":"3.36"},"pgtap":{"version":"1.3.3"},"sqitch":{"version":"1.4.1"},"VERSION":"2.7.0","DATE":"2024-04-22"}
+{"alpine":{"version":"3.20"},"pg_prove":{"version":"3.36"},"pgtap":{"version":"1.3.3"},"sqitch":{"version":"1.4.1"},"VERSION":"2.8.0","DATE":"2024-07-14"}

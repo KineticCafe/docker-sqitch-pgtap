@@ -1,5 +1,9 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.8.0 / 2024-07-17
+
+- Upgrade Alpine to version [3.20][alpine-3.20].
+
 ## 2.7.0 / 2024-04-24
 
 - Upgrade pgTAP to released version [1.3.3][pgtap-1.3.3].
@@ -43,6 +47,7 @@
 
   - Add the version of Alpine to `package-versions.json` and use that for image
     builds.
+
   - Change maintenance procedure to automatically generate the
     `build/pgtap/Dockerfile`. The latest versions required some updates because
     of CLANG and LLVM version mismatches.
@@ -192,6 +197,7 @@
 [alpine-3.17]: https://hub.docker.com/_/alpine/tags?name=3.17
 [alpine-3.18]: https://hub.docker.com/_/alpine/tags?name=3.18
 [alpine-3.19]: https://hub.docker.com/_/alpine/tags?name=3.19
+[alpine-3.20]: https://hub.docker.com/_/alpine/tags?name=3.20
 [casey/just]: https://github.com/casey/just
 [extractions/setup-just]: https://github.com/extractions/setup-just
 [orbstack-internal]: https://docs.orbstack.dev/machines/network#connecting-to-servers-on-mac

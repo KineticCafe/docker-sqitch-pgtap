@@ -1,6 +1,6 @@
 {
   "defaults": {
-    "alpine": "3.19"
+    "alpine": "3.20"
   },
   "postgres": [
     {
