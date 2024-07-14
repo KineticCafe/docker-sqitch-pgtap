@@ -63,7 +63,7 @@ echo $__DOCKERFILE_VERSION__ > /home/sqitch/VERSION
 echo $__DOCKERFILE_DATE__ > /home/sqitch/DATE
 
 chmod +x /home/sqitch/bin/*
-chown -R sqitch:sqitch /home
+chown -R sqitch:sqitch /home/sqitch
 FINALIZE
 
 ENV LESS=-R LC_ALL=C.UTF-8 LANG=C.UTF-8 SQITCH_EDITOR=nano SQITCH_PAGER=less
