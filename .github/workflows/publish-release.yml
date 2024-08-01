@@ -29,12 +29,12 @@ jobs:
               sed 's/docker-//'
           )" >"${GITHUB_ENV}"
 
-      - uses: docker/login-action@v3.2.0
+      - uses: docker/login-action@v3.3.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - uses: docker/login-action@v3.2.0
+      - uses: docker/login-action@v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -56,14 +56,14 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
-      - uses: docker/setup-qemu-action@v3.0.0
-      - uses: docker/setup-buildx-action@v3.3.0
+      - uses: docker/setup-qemu-action@v3.2.0
+      - uses: docker/setup-buildx-action@v3.6.1
 
       - id: package-versions
         run: echo "data=$(cat package-versions.json)" >> $GITHUB_OUTPUT
 
       - id: docker_build
-        uses: docker/build-push-action@v6.2.0
+        uses: docker/build-push-action@v6.5.0
         with:
           context: .
           push: true
