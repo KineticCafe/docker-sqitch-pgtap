@@ -1,5 +1,51 @@
 # syntax=docker/dockerfile:1
 
+FROM postgres:17-alpine3.20 AS build-pgtap-psql-17
+
+ARG PGTAP_VERSION
+
+COPY pgtap-$PGTAP_VERSION /opt/pgtap-$PGTAP_VERSION
+
+RUN <<SETUP
+set -eux
+
+apk update
+
+apk add \
+  bash \
+  build-base \
+  make \
+  openssl \
+  perl \
+  perl-dev \
+  postgresql-dev \
+  wget
+
+wanted_clang=$(
+  pg_config --configure |
+    tr ' ' '\n' |
+    grep CLANG |
+    sed "s/'CLANG=\(.*\)'/\1/"
+)
+
+if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
+  version="${wanted_clang/clang-}"
+  apk add clang"${version}" llvm"${version}"
+fi
+
+mkdir -p /opt/pgtap/17
+SETUP
+
+RUN <<BUILD
+set -eux
+
+cd /opt/pgtap-$PGTAP_VERSION
+make
+make install
+mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/17
+BUILD
+
+
 FROM postgres:16-alpine3.20 AS build-pgtap-psql-16
 
 ARG PGTAP_VERSION
@@ -372,6 +418,7 @@ FROM alpine:3.20 AS package-pgtap
 
 RUN mkdir -p /opt/pgtap
 
+COPY --from=build-pgtap-psql-17 /opt/pgtap/17 /opt/pgtap/17
 COPY --from=build-pgtap-psql-16 /opt/pgtap/16 /opt/pgtap/16
 COPY --from=build-pgtap-psql-15 /opt/pgtap/15 /opt/pgtap/15
 COPY --from=build-pgtap-psql-14 /opt/pgtap/14 /opt/pgtap/14

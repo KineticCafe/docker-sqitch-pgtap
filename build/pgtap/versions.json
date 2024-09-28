@@ -4,6 +4,9 @@
   },
   "postgres": [
     {
+      "name": "17"
+    },
+    {
       "name": "16",
       "version": "16"
     },

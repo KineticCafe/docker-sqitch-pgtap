@@ -67,6 +67,7 @@ case "${version}" in
 14*) version=14 ;;
 15*) version=15 ;;
 16*) version=16 ;;
+17*) version=17 ;;
 *)
   echo >&2 "Unknown or unsupported PostgreSQL version '${version}'."
   exit 1
