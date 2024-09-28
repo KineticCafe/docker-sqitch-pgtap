@@ -3,21 +3,14 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
-    groups:
-      actions:
-        patterns:
-          - '*'
-        update-types:
-          - minor
-          - patch
+      interval: weekly
 
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
 
   - package-ecosystem: docker
     directory: /build/pgtap
     schedule:
-      interval: monthly
+      interval: weekly
