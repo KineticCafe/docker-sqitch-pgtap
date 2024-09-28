@@ -1,5 +1,9 @@
 # kineticcafe/sqitch-pgtap Changelog
 
+## 2.9.0 / 2024-09-28
+
+- Add support for the released version of PostgreSQL 17.
+
 ## 2.8.0 / 2024-07-17
 
 - Upgrade Alpine to version [3.20][alpine-3.20].
@@ -62,7 +66,8 @@
 
 - Upgraded Sqitch version to [1.4.0][sqitch-1.4.0].
 
-- Upgraded pgTAP to 1.2.1 at theory/pgtap@96a7a416311ea5f2fa140f59cfdf7c7afbded17c.
+- Upgraded pgTAP to 1.2.1 at
+  theory/pgtap@96a7a416311ea5f2fa140f59cfdf7c7afbded17c.
 
 - Added PostgreSQL 16 beta 2 for testing.
 
@@ -93,8 +98,8 @@
 - Rather than committing `pgtap.tar`, we will be committing the generated files
   for easier comparison.
 
-- Changed the `run` script to pull from ghcr.io by default instead of Docker
-  Hub and other `run` script improvements.
+- Changed the `run` script to pull from ghcr.io by default instead of Docker Hub
+  and other `run` script improvements.
 
 - Fixed a bug with `do_pgtap` version detection depending on the configuration
   of the local `.psqlrc`. It now explicitly does not load a `.psqlrc` file.
@@ -166,8 +171,8 @@
 
   - Standardize `structure.sql` cleaning.
 
-  - Improve `structure.sql` comparison and report when there are no
-    differences in the database structure.
+  - Improve `structure.sql` comparison and report when there are no differences
+    in the database structure.
 
 - Changed all `scripts/*` files from `/bin/sh` to `/bin/bash`.
 
