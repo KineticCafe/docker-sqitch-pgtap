@@ -21,7 +21,7 @@ jobs:
         run: echo "data=$(cat package-versions.json)" >> $GITHUB_OUTPUT
 
       - id: docker_build
-        uses: docker/build-push-action@v6.8.0
+        uses: docker/build-push-action@v6.9.0
         with:
           context: .
           push: false
