@@ -414,7 +414,7 @@ mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/9.6
 BUILD
 
 
-FROM alpine:3.20 AS package-pgtap
+FROM alpine:3.21 AS package-pgtap
 
 RUN mkdir -p /opt/pgtap
 
