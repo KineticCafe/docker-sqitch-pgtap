@@ -236,17 +236,18 @@ generate_pgtap_dockerfile:
         )
 
         if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-          version="${wanted_clang/clang-}"
+          version=$(echo "${wanted_clang}" | sed 's/clang-//')
           apk add clang"${version}" llvm"${version}"
         fi
 
         mkdir -p /opt/pgtap/#{name}
         SETUP
 
+        WORKDIR /opt/pgtap-$PGTAP_VERSION
+
         RUN <<BUILD
         set -eux
 
-        cd /opt/pgtap-$PGTAP_VERSION
         make
         make install
         mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/#{name}
@@ -261,6 +262,8 @@ generate_pgtap_dockerfile:
 
     dockerfile = <<~DOCKERFILE
       # syntax=docker/dockerfile:1
+
+      # hadolint global ignore=DL3018,DL3019,DL4006
 
       #{blocks.join("\n\n")}
 

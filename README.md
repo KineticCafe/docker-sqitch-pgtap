@@ -1,23 +1,23 @@
 # [ghcr.io/]kineticcafe/sqitch-pgtap: Sqitch/PostgreSQL & pgTAP in Docker
 
-This is a simple Docker container that contains [sqitch][], [pgTAP][], and
-[`pg_prove`][] for use with PostgreSQL. It has been created so that it's easier
-to work with `sqitch` and `pg_prove`/`pgTAP` without going through the effort of
-installing them on various systems.
+This is a simple Docker container that contains [sqitch][sqitch],
+[pgTAP][pgTAP], and [`pg_prove`][`pg_prove`] for use with PostgreSQL. It has
+been created so that it's easier to work with `sqitch` and `pg_prove`/`pgTAP`
+without going through the effort of installing them on various systems.
 
 The image is based on Alpine 3.19 and does not include a PostgreSQL server;
 instead, it is expected that all values will be provided through environment
 variables or on the command-line.
 
-Unless otherwise noted, pgTAP will be installed from [PGXN][].
+Unless otherwise noted, pgTAP will be installed from [PGXN][PGXN].
 
 This version of the container includes:
 
 - pgTAP 1.3.3 (from theory/pgtap@02bc769c92c48d01e4c2f76db6523287017b45a9)
-  - Full support for PostgreSQL 12, 13, 14, 15, and 16
-  - Best effort support for end of life PostgreSQL versions 9.6, 10, and 11
-- pg_prove 3.36
-- Sqitch 1.4.1
+  - Full support for PostgreSQL 12, 13, 14, 15, 16, and 17
+  - Best effort support for end of life PostgreSQL versions 9.6, 10, 11, and 12
+- pg\_prove 3.36
+- Sqitch 1.5.0
 
 The version of pgTAP is installed and uninstalled as needed; unit test files
 _**must not**_ include `CREATE EXTENSION pgtap`.
@@ -36,14 +36,14 @@ it manages environment variable configuration for each run. The
 
 ```console
 $ IMAGE=kineticcafe/sqitch-pgtap:latest ./run version
-[gchr.io/]kineticcafe/sqitch-pgtap:2.7.0
+[gchr.io/]kineticcafe/sqitch-pgtap:2.10.0
 
-  alpine 3.19
-  sqitch (App::Sqitch) v1.4.1
+  alpine 3.21
+  sqitch (App::Sqitch) v1.5.0
   pgtap 1.3.3
   pg_prove 3.36
 
-Last updated 2024-04-22
+Last updated 2025-01-07
 ```
 
 ### Installing `kineticcafe-sqitch-pgtap`
