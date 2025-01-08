@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 
-FROM postgres:17-alpine3.20 AS build-pgtap-psql-17
+# hadolint global ignore=DL3018,DL3019,DL4006
+
+FROM postgres:17-alpine3.21 AS build-pgtap-psql-17
 
 ARG PGTAP_VERSION
 
@@ -29,24 +31,25 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/17
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/17
 BUILD
 
 
-FROM postgres:16-alpine3.20 AS build-pgtap-psql-16
+FROM postgres:16-alpine3.21 AS build-pgtap-psql-16
 
 ARG PGTAP_VERSION
 
@@ -75,24 +78,25 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/16
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/16
 BUILD
 
 
-FROM postgres:15-alpine3.20 AS build-pgtap-psql-15
+FROM postgres:15-alpine3.21 AS build-pgtap-psql-15
 
 ARG PGTAP_VERSION
 
@@ -121,24 +125,25 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/15
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/15
 BUILD
 
 
-FROM postgres:14-alpine3.20 AS build-pgtap-psql-14
+FROM postgres:14-alpine3.21 AS build-pgtap-psql-14
 
 ARG PGTAP_VERSION
 
@@ -167,24 +172,25 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/14
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/14
 BUILD
 
 
-FROM postgres:13-alpine3.20 AS build-pgtap-psql-13
+FROM postgres:13-alpine3.21 AS build-pgtap-psql-13
 
 ARG PGTAP_VERSION
 
@@ -213,24 +219,25 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/13
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/13
 BUILD
 
 
-FROM postgres:12-alpine3.20 AS build-pgtap-psql-12
+FROM postgres:12-alpine3.21 AS build-pgtap-psql-12
 
 ARG PGTAP_VERSION
 
@@ -259,17 +266,18 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/12
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/12
@@ -305,17 +313,18 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/11
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/11
@@ -351,17 +360,18 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/10
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/10
@@ -397,24 +407,25 @@ wanted_clang=$(
 )
 
 if ! command -v "${wanted_clang}" >/dev/null 2>/dev/null; then
-  version="${wanted_clang/clang-}"
+  version=$(echo "${wanted_clang}" | sed 's/clang-//')
   apk add clang"${version}" llvm"${version}"
 fi
 
 mkdir -p /opt/pgtap/9.6
 SETUP
 
+WORKDIR /opt/pgtap-$PGTAP_VERSION
+
 RUN <<BUILD
 set -eux
 
-cd /opt/pgtap-$PGTAP_VERSION
 make
 make install
 mv sql/pgtap.sql sql/uninstall_pgtap.sql /opt/pgtap/9.6
 BUILD
 
 
-FROM alpine:3.20 AS package-pgtap
+FROM alpine:3.21 AS package-pgtap
 
 RUN mkdir -p /opt/pgtap
 

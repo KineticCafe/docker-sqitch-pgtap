@@ -1,0 +1,5 @@
+rules:
+  cache-poisoning:
+    ignore:
+      - build-test-image.yml:26
+      - publish-release.yml:3

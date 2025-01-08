@@ -1,0 +1,53 @@
+name: Reviewdog
+
+on:
+  pull_request:
+
+jobs:
+  typos:
+    if: ${{ github.event.action != 'closed' }}
+    name: Typos
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: reviewdog/action-typos@2e6b919585397817d4fc55f0ee1dc771530b1089 #v1.13.0
+
+  actionlint:
+    if: ${{ github.event.action != 'closed' }}
+    name: Actionlint
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: reviewdog/action-actionlint@534eb894142bcf31616e5436cbe4214641c58101 #v1.61.0
+
+  hadolint:
+    if: ${{ github.event.action != 'closed' }}
+    name: Actionlint
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: reviewdog/action-hadolint@a588cf93c77060a2836b260c6f0860dc102e8d83 #v1.48.2
