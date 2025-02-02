@@ -1,5 +1,14 @@
 # [ghcr.io/]kineticcafe/sqitch-pgtap: Sqitch/PostgreSQL & pgTAP in Docker
 
+> [!IMPORTANT]
+>
+> This image will no longer receive updates and the repo is being archived as we
+> no longer use Sqitch or pgTAP. I recommend forking this repo if you wish to
+> maintain a similar image for your organization as the architecture and actions
+> work very well.
+>
+> Kinetic Cafe open source team
+
 This is a simple Docker container that contains [sqitch][sqitch],
 [pgTAP][pgTAP], and [`pg_prove`][`pg_prove`] for use with PostgreSQL. It has
 been created so that it's easier to work with `sqitch` and `pg_prove`/`pgTAP`
